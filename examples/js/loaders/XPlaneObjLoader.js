@@ -225,23 +225,12 @@ THREE.XPlaneObjLoader = ( function () {
 
 			}
 
-			if ( text.indexOf( '\\\n' ) !== - 1 ) {
-
-				// join lines separated by a line continuation character (\)
-				text = text.replace( /\\\n/g, '' );
-
-			}
-
 			var lines = text.split( '\n' );
 			var line = '';
-
-			// Faster to just trim left side of the line. Use if available.
-			var trimLeft = ( typeof ''.trimLeft === 'function' );
 
 			for ( var i = 0, l = lines.length; i < l; i++ ) {
 
 				line = lines[ i ];
-				line = trimLeft ? line.trimLeft() : line.trim();
 
 				// Ignore various unimportant lines
 				if ( line.length === 0 ) continue;
