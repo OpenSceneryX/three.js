@@ -255,6 +255,10 @@ THREE.XPlaneObjLoader = ( function () {
 						state.indices.push( parseInt( data[ 1 ] ) );
 						break;
 
+					case 'LINES':
+						// TODO: Implement lines
+						break;
+
 					case 'TEXTURE':
 						var parts = data[ 1 ].split( '/' );
 						this.loadTexture( parts[ parts.length - 1 ] );
@@ -279,6 +283,10 @@ THREE.XPlaneObjLoader = ( function () {
 
 						}
 
+						break;
+
+					case 'VLINE':
+						// TODO: Implement lines
 						break;
 
 					case 'VT':
@@ -306,6 +314,7 @@ THREE.XPlaneObjLoader = ( function () {
 					case 'POINT_COUNTS':
 					case 'TILTED':
 					case 'ATTR_poly_os':
+					case 'ATTR_no_cull':
 						// Lines we are ignoring right now (some may be implemented later)
 						break;
 
