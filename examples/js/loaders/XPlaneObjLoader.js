@@ -272,9 +272,6 @@ THREE.XPlaneObjLoader = ( function () {
 						this.loadTexture( parts[ parts.length - 1 ] );
 						break;
 
-					case 'TEXTURE_LIT':
-						break;
-
 					case 'TRIS':
 						// Build our face data from the number of tris specified
 						var index = parseInt( data[ 1 ] );
@@ -319,11 +316,117 @@ THREE.XPlaneObjLoader = ( function () {
 						);*/
 						break;
 
-					case 'POINT_COUNTS':
-					case 'TILTED':
-					case 'ATTR_poly_os':
+					case 'ANIM_begin':
+					case 'ANIM_end':
+					case 'ANIM_hide':
+					case 'ANIM_keyframe_loop':
+					case 'ANIM_rotate':
+					case 'ANIM_rotate_begin':
+					case 'ANIM_rotate_end':
+					case 'ANIM_rotate_key':
+					case 'ANIM_show':
+					case 'ANIM_trans':
+					case 'ANIM_trans_begin':
+					case 'ANIM_trans_end':
+					case 'ANIM_trans_key':
+					case 'ATTR_ambient_rgb':
+					case 'ATTR_axis_detent_range':
+					case 'ATTR_axis_detented':
+					case 'ATTR_blend':
+					case 'ATTR_cockpit':
+					case 'ATTR_cockpit_device':
+					case 'ATTR_cockpit_region':
+					case 'ATTR_cull':
+					case 'ATTR_depth':
+					case 'ATTR_draped':
+					case 'ATTR_draw_disable':
+					case 'ATTR_draw_enable':
+					case 'ATTR_emission_rgb':
+					case 'ATTR_hard':
+					case 'ATTR_hard_deck':
+					case 'ATTR_layer_group':
+					case 'ATTR_layer_group_draped':
+					case 'ATTR_light_level':
+					case 'ATTR_light_level_reset':
+					case 'ATTR_LOD_draped':
+					case 'ATTR_manip_axis_knob':
+					case 'ATTR_manip_axis_switch_left_right':
+					case 'ATTR_manip_axis_switch_up_down':
+					case 'ATTR_manip_command':
+					case 'ATTR_manip_command_axis':
+					case 'ATTR_manip_command_knob':
+					case 'ATTR_manip_command_knob2':
+					case 'ATTR_manip_command_switch_left_right':
+					case 'ATTR_manip_command_switch_left_right2':
+					case 'ATTR_manip_command_switch_up_down':
+					case 'ATTR_manip_command_switch_up_down2':
+					case 'ATTR_manip_delta':
+					case 'ATTR_manip_drag_axis':
+					case 'ATTR_manip_drag_axis_pix':
+					case 'ATTR_manip_drag_rotate':
+					case 'ATTR_manip_drag_xy':
+					case 'ATTR_manip_keyframe':
+					case 'ATTR_manip_none':
+					case 'ATTR_manip_noop':
+					case 'ATTR_manip_push':
+					case 'ATTR_manip_radio':
+					case 'ATTR_manip_toggle':
+					case 'ATTR_manip_wheel':
+					case 'ATTR_manip_wrap':
+					case 'ATTR_no_blend':
+					case 'ATTR_no_cockpit':
 					case 'ATTR_no_cull':
-									// Lines we are ignoring right now (some may be implemented later)
+					case 'ATTR_no_depth':
+					case 'ATTR_no_draped':
+					case 'ATTR_no_hard':
+					case 'ATTR_no_shadow':
+					case 'ATTR_no_solid_camera':
+					case 'ATTR_poly_os':
+					case 'ATTR_reset':
+					case 'ATTR_shade_flat':
+					case 'ATTR_shade_smooth':
+					case 'ATTR_shadow':
+					case 'ATTR_shadow_blend':
+					case 'ATTR_shiny_rat':
+					case 'ATTR_solid_camera':
+					case 'ATTR_specular_rgb':
+					case 'BUMP_LEVEL':
+					case 'COCKPIT_REGION':
+					case 'IF':
+					case 'ELSE':
+					case 'EMITTER':
+					case 'ENDIF':
+					case 'GLOBAL_cockpit_lit':
+					case 'GLOBAL_no_blend':
+					case 'GLOBAL_no_shadow':
+					case 'GLOBAL_shadow_blend':
+					case 'GLOBAL_specular':
+					case 'GLOBAL_tint':
+					case 'LIGHT_CUSTOM':
+					case 'LIGHT_NAMED':
+					case 'LIGHT_PARAM':
+					case 'LIGHT_SPILL_CUSTOM':
+					case 'LIGHTS':
+					case 'MAGNET':
+					case 'NO_BLEND':
+					case 'NO_SHADOW':
+					case 'POINT_COUNTS':
+					case 'REQUIRE_WET':
+					case 'REQUIRE_DRY':
+					case 'SLOPE_LIMIT':
+					case 'slung_load_weight':
+					case 'smoke_black':
+					case 'smoke_white':
+					case 'SPECULAR':
+					case 'TEXTURE_LIT':
+					case 'TEXTURE_LIT_NOWRAP':
+					case 'TEXTURE_NORMAL':
+					case 'TEXTURE_NORMAL_NOWRAP':
+					case 'TEXTURE_NOWRAP':
+					case 'TILTED':
+					case 'TWO_SIDED':
+					case 'VLIGHT':
+						// Lines we are ignoring right now (some may be implemented later)
 						break;
 
 					default:
