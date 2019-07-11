@@ -66,24 +66,6 @@ THREE.XPlaneObjLoader = ( function () {
 
 			},
 
-			addVertexPoint: function ( a ) {
-
-				var src = this.vertices;
-				var dst = this.object.geometry.vertices;
-
-				dst.push( src[ a + 0 ], src[ a + 1 ], src[ a + 2 ] );
-
-			},
-
-			addVertexLine: function ( a ) {
-
-				var src = this.vertices;
-				var dst = this.object.geometry.vertices;
-
-				dst.push( src[ a + 0 ], src[ a + 1 ], src[ a + 2 ] );
-
-			},
-
 			addNormal: function ( a, b, c ) {
 
 				var src = this.normals;
@@ -114,15 +96,6 @@ THREE.XPlaneObjLoader = ( function () {
 				dst.push( src[ a + 0 ], src[ a + 1 ] );
 				dst.push( src[ b + 0 ], src[ b + 1 ] );
 				dst.push( src[ c + 0 ], src[ c + 1 ] );
-
-			},
-
-			addUVLine: function ( a ) {
-
-				var src = this.uvs;
-				var dst = this.object.geometry.uvs;
-
-				dst.push( src[ a + 0 ], src[ a + 1 ] );
 
 			},
 
@@ -162,41 +135,6 @@ THREE.XPlaneObjLoader = ( function () {
 				if ( this.colors.length > 0 ) {
 
 					this.addColor( ia, ib, ic );
-
-				}
-
-			},
-
-			addPointGeometry: function ( vertices ) {
-
-				this.object.geometry.type = 'Points';
-
-				var vLen = this.vertices.length;
-
-				for ( var vi = 0, l = vertices.length; vi < l; vi ++ ) {
-
-					this.addVertexPoint( this.parseVertexIndex( vertices[ vi ], vLen ) );
-
-				}
-
-			},
-
-			addLineGeometry: function ( vertices, uvs ) {
-
-				this.object.geometry.type = 'Line';
-
-				var vLen = this.vertices.length;
-				var uvLen = this.uvs.length;
-
-				for ( var vi = 0, l = vertices.length; vi < l; vi ++ ) {
-
-					this.addVertexLine( this.parseVertexIndex( vertices[ vi ], vLen ) );
-
-				}
-
-				for ( var uvi = 0, l = uvs.length; uvi < l; uvi ++ ) {
-
-					this.addUVLine( this.parseUVIndex( uvs[ uvi ], uvLen ) );
 
 				}
 
