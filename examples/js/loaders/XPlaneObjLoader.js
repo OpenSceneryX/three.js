@@ -156,6 +156,8 @@ THREE.XPlaneObjLoader = ( function () {
 
 		this.material = new THREE.MeshStandardMaterial();
 		this.material.side = THREE.BackSide;
+		this.material.transparent = true;
+
 	}
 
 	XPlaneObjLoader.prototype = {
@@ -302,6 +304,8 @@ THREE.XPlaneObjLoader = ( function () {
 						break;
 
 					case 'POINT_COUNTS':
+					case 'TILTED':
+					case 'ATTR_poly_os':
 						// Lines we are ignoring right now (some may be implemented later)
 						break;
 
