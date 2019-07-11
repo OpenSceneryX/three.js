@@ -359,7 +359,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 	//
 
-	function XOBJLoader( manager ) {
+	function XPlaneObjLoader( manager ) {
 
 		this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
@@ -367,9 +367,9 @@ THREE.XPlaneObjLoader = ( function () {
 
 	}
 
-	XOBJLoader.prototype = {
+	XPlaneObjLoader.prototype = {
 
-		constructor: XOBJLoader,
+		constructor: XPlaneObjLoader,
 
 		load: function ( url, onLoad, onProgress, onError ) {
 
@@ -403,7 +403,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 		parse: function ( text ) {
 
-			console.time( 'XOBJLoader' );
+			console.time( 'XPlaneObjLoader' );
 
 			var state = new ParserState();
 
@@ -571,7 +571,7 @@ THREE.XPlaneObjLoader = ( function () {
 					// Handle null terminated files without exception
 					if ( line === '\0' ) continue;
 
-					throw new Error( 'THREE.XOBJLoader: Unexpected line: "' + line + '"' );
+					throw new Error( 'THREE.XPlaneObjLoader: Unexpected line: "' + line + '"' );
 
 				}
 
@@ -734,7 +734,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 			}
 
-			console.timeEnd( 'XOBJLoader' );
+			console.timeEnd( 'XPlaneObjLoader' );
 
 			return container;
 
@@ -742,7 +742,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 	};
 
-	return XOBJLoader;
+	return XPlaneObjLoader;
 
 } )();
 
