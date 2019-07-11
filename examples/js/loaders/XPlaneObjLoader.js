@@ -216,7 +216,8 @@ THREE.XPlaneObjLoader = ( function () {
 
 		this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
-		this.material = null;
+		this.material = new THREE.MeshStandardMaterial();
+		this.material.side = THREE.BackSide;
 	}
 
 	XPlaneObjLoader.prototype = {
@@ -226,7 +227,6 @@ THREE.XPlaneObjLoader = ( function () {
 		load: function ( url, onLoad, onProgress, onError ) {
 
 			var scope = this;
-
 			var loader = new THREE.FileLoader( scope.manager );
 			loader.setPath( this.path );
 			loader.load( url, function ( text ) {
@@ -245,9 +245,30 @@ THREE.XPlaneObjLoader = ( function () {
 
 		},
 
-		setMaterial: function ( material ) {
+		loadTexture: function ( path ) {
 
-			this.material = material;
+			var scope = this;
+			var textureLoader = new THREE.TextureLoader();
+
+			textureLoader.load(
+				// resource URL
+				path,
+
+				// onLoad callback
+				function ( texture ) {
+					scope.material.map = texture;
+					scope.material.map.needsUpdate = true;
+					scope.material.needsUpdate = true;
+				},
+
+				// onProgress callback
+				undefined,
+
+				// onError callback
+				function ( err ) {
+					console.error( 'Could not load texture:' + path );
+				}
+			);
 
 			return this;
 
@@ -274,7 +295,7 @@ THREE.XPlaneObjLoader = ( function () {
 			}
 
 			var lines = text.split( '\n' );
-			var line = '', lineFirstChar = '';
+			var line = '';
 
 			// Faster to just trim left side of the line. Use if available.
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
@@ -306,7 +327,9 @@ THREE.XPlaneObjLoader = ( function () {
 						break;
 
 					case 'TEXTURE':
-							break;
+						var parts = data[ 1 ].split( '/' );
+						this.loadTexture( parts[ parts.length - 1 ] );
+						break;
 
 					case 'TEXTURE_LIT':
 						break;
@@ -372,12 +395,10 @@ THREE.XPlaneObjLoader = ( function () {
 
 				var object = state.objects[ i ];
 				var geometry = object.geometry;
-				var material = this.material || new THREE.MeshPhongMaterial();
+				var material = this.material;
 				var isLine = ( geometry.type === 'Line' );
 				var isPoints = ( geometry.type === 'Points' );
-				var hasVertexColors = false;
 
-				// Skip o/g line declarations that did not follow with any faces
 				if ( geometry.vertices.length === 0 ) continue;
 
 				var buffergeometry = new THREE.BufferGeometry();
