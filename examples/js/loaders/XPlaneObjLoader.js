@@ -17,13 +17,9 @@ THREE.XPlaneObjLoader = ( function () {
 			uvs: [],
 			indices: [],
 
+			material: null,
+
 			startObject: function ( name ) {
-
-				if ( this.object && typeof this.object._finalize === 'function' ) {
-
-					this.object._finalize( );
-
-				}
 
 				this.object = {
 					name: name || '',
@@ -34,79 +30,10 @@ THREE.XPlaneObjLoader = ( function () {
 						colors: [],
 						uvs: []
 					},
-					materials: [],
 					smooth: true,
-
-					startMaterial: function ( name ) {
-
-						var material = {
-							index: this.materials.length,
-							name: name || '',
-							smooth: this.smooth,
-							groupStart: 0,
-							groupEnd: -1,
-							groupCount: -1,
-
-							clone: function ( index ) {
-
-								var cloned = {
-									index: ( typeof index === 'number' ? index : this.index ),
-									name: this.name,
-									smooth: this.smooth,
-									groupStart: 0,
-									groupEnd: - 1,
-									groupCount: - 1,
-								};
-								cloned.clone = this.clone.bind( cloned );
-								return cloned;
-
-							}
-						};
-
-						this.materials.push( material );
-
-						return material;
-
-					},
-
-					currentMaterial: function () {
-
-						if ( this.materials.length > 0 ) {
-
-							return this.materials[ this.materials.length - 1 ];
-
-						}
-
-						return undefined;
-
-					},
-
-					_finalize: function ( ) {
-
-						// Guarantee at least one empty material, this makes the creation later more straight forward.
-						if ( this.materials.length === 0 ) {
-
-							this.materials.push( {
-								name: '',
-								smooth: this.smooth
-							} );
-
-						}
-
-					}
 				};
 
 				this.objects.push( this.object );
-
-			},
-
-			finalize: function () {
-
-				if ( this.object && typeof this.object._finalize === 'function' ) {
-
-					this.object._finalize( );
-
-				}
 
 			},
 
@@ -289,8 +216,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 		this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
-		this.materials = null;
-
+		this.material = null;
 	}
 
 	XPlaneObjLoader.prototype = {
@@ -319,9 +245,9 @@ THREE.XPlaneObjLoader = ( function () {
 
 		},
 
-		setMaterials: function ( materials ) {
+		setMaterial: function ( material ) {
 
-			this.materials = materials;
+			this.material = material;
 
 			return this;
 
@@ -349,7 +275,6 @@ THREE.XPlaneObjLoader = ( function () {
 
 			var lines = text.split( '\n' );
 			var line = '', lineFirstChar = '';
-			var lineLength = 0;
 
 			// Faster to just trim left side of the line. Use if available.
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
@@ -358,11 +283,9 @@ THREE.XPlaneObjLoader = ( function () {
 
 				line = lines[ i ];
 				line = trimLeft ? line.trimLeft() : line.trim();
-				lineLength = line.length;
-
-				if ( lineLength === 0 ) continue;
 
 				// Ignore various unimportant lines
+				if ( line.length === 0 ) continue;
 				if ( line.charAt( 0 ) === '#' || line === 'I' || line === 'A' || line === '800' || line === 'OBJ' ) continue;
 
 				var data = line.split( /\s+/ );
@@ -443,15 +366,13 @@ THREE.XPlaneObjLoader = ( function () {
 
 			}
 
-			state.finalize();
-
 			var container = new THREE.Group();
 
 			for ( var i = 0, l = state.objects.length; i < l; i ++ ) {
 
 				var object = state.objects[ i ];
 				var geometry = object.geometry;
-				var materials = object.materials;
+				var material = this.material || new THREE.MeshPhongMaterial();
 				var isLine = ( geometry.type === 'Line' );
 				var isPoints = ( geometry.type === 'Points' );
 				var hasVertexColors = false;
@@ -486,110 +407,21 @@ THREE.XPlaneObjLoader = ( function () {
 
 				}
 
-				// Create materials
-
-				var createdMaterials = [];
-
-				for ( var mi = 0, miLen = materials.length; mi < miLen; mi ++ ) {
-
-					var sourceMaterial = materials[ mi ];
-					var material = undefined;
-
-					if ( this.materials !== null ) {
-
-						material = this.materials.create( sourceMaterial.name );
-
-						// mtl etc. loaders probably can't create line materials correctly, copy properties to a line material.
-						if ( isLine && material && ! ( material instanceof THREE.LineBasicMaterial ) ) {
-
-							var materialLine = new THREE.LineBasicMaterial();
-							THREE.Material.prototype.copy.call( materialLine, material );
-							materialLine.color.copy( material.color );
-							materialLine.lights = false;
-							material = materialLine;
-
-						} else if ( isPoints && material && ! ( material instanceof THREE.PointsMaterial ) ) {
-
-							var materialPoints = new THREE.PointsMaterial( { size: 10, sizeAttenuation: false } );
-							THREE.Material.prototype.copy.call( materialPoints, material );
-							materialPoints.color.copy( material.color );
-							materialPoints.map = material.map;
-							materialPoints.lights = false;
-							material = materialPoints;
-
-						}
-
-					}
-
-					if ( ! material ) {
-
-						if ( isLine ) {
-
-							material = new THREE.LineBasicMaterial();
-
-						} else if ( isPoints ) {
-
-							material = new THREE.PointsMaterial( { size: 1, sizeAttenuation: false } );
-
-						} else {
-
-							material = new THREE.MeshPhongMaterial();
-
-						}
-
-						material.name = sourceMaterial.name;
-
-					}
-
-					material.flatShading = sourceMaterial.smooth ? false : true;
-					material.vertexColors = hasVertexColors ? THREE.VertexColors : THREE.NoColors;
-
-					createdMaterials.push( material );
-
-				}
-
 				// Create mesh
 
 				var mesh;
 
-				if ( createdMaterials.length > 1 ) {
+				if ( isLine ) {
 
-					for ( var mi = 0, miLen = materials.length; mi < miLen; mi ++ ) {
+					mesh = new THREE.LineSegments( buffergeometry, material );
 
-						var sourceMaterial = materials[ mi ];
-						buffergeometry.addGroup( sourceMaterial.groupStart, sourceMaterial.groupCount, mi );
+				} else if ( isPoints ) {
 
-					}
-
-					if ( isLine ) {
-
-						mesh = new THREE.LineSegments( buffergeometry, createdMaterials );
-
-					} else if ( isPoints ) {
-
-						mesh = new THREE.Points( buffergeometry, createdMaterials );
-
-					} else {
-
-						mesh = new THREE.Mesh( buffergeometry, createdMaterials );
-
-					}
+					mesh = new THREE.Points( buffergeometry, material );
 
 				} else {
 
-					if ( isLine ) {
-
-						mesh = new THREE.LineSegments( buffergeometry, createdMaterials[ 0 ] );
-
-					} else if ( isPoints ) {
-
-						mesh = new THREE.Points( buffergeometry, createdMaterials[ 0 ] );
-
-					} else {
-
-						mesh = new THREE.Mesh( buffergeometry, createdMaterials[ 0 ] );
-
-					}
+					mesh = new THREE.Mesh( buffergeometry, material );
 
 				}
 
