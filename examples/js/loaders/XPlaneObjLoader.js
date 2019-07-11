@@ -229,7 +229,9 @@ THREE.XPlaneObjLoader = ( function () {
 
 			var lines = text.split( '\n' );
 			var line = '';
+			var foundLOD = false;
 
+			lineloop:
 			for ( var i = 0, l = lines.length; i < l; i++ ) {
 
 				line = lines[ i ];
@@ -241,6 +243,12 @@ THREE.XPlaneObjLoader = ( function () {
 				var data = line.split( /\s+/ );
 
 				switch ( data[ 0 ] ) {
+
+					case 'ATTR_LOD':
+						// Ignore everything after second LOD. This could be improved to detect the closest LOD or even to be able to pick a LOD from the model.
+						if ( foundLOD ) break lineloop;
+						else foundLOD = true;
+						break;
 
 					case 'IDX10':
 						for ( var j = 1; j < 11; j++ ) {
@@ -315,7 +323,7 @@ THREE.XPlaneObjLoader = ( function () {
 					case 'TILTED':
 					case 'ATTR_poly_os':
 					case 'ATTR_no_cull':
-						// Lines we are ignoring right now (some may be implemented later)
+									// Lines we are ignoring right now (some may be implemented later)
 						break;
 
 					default:
