@@ -378,107 +378,87 @@ THREE.XPlaneObjLoader = ( function () {
 			for ( var i = 0, l = lines.length; i < l; i ++ ) {
 
 				line = lines[ i ];
-
 				line = trimLeft ? line.trimLeft() : line.trim();
-
 				lineLength = line.length;
 
 				if ( lineLength === 0 ) continue;
 
-				lineFirstChar = line.charAt( 0 );
-
 				// Ignore various unimportant lines
-				if ( lineFirstChar === '#' || line === 'I' || line === 'A' || line === '800' || line === 'OBJ' || line.startsWith( 'POINT_COUNTS' ) ) continue;
+				if ( line.charAt( 0 ) === '#' || line === 'I' || line === 'A' || line === '800' || line === 'OBJ' ) continue;
 
-				if ( lineFirstChar === 'V' ) {
+				var data = line.split( /\s+/ );
 
-					var data = line.split( /\s+/ );
+				switch ( data[ 0 ] ) {
 
-					switch ( data[ 0 ] ) {
+					case 'IDX10':
+						for ( var j = 1; j < 11; j ++ ) {
 
-						case 'VT':
-							state.vertices.push(
-								parseFloat( data[ 1 ] ),
-								parseFloat( data[ 2 ] ),
-								parseFloat( data[ 3 ] )
+							state.indices.push( parseInt( data[ j ] ) );
+
+						}
+
+						break;
+
+					case 'IDX':
+						state.indices.push( parseInt( data[ 1 ] ) );
+						break;
+
+					case 'TEXTURE':
+							break;
+
+					case 'TEXTURE_LIT':
+						break;
+
+					case 'TRIS':
+						// Build our face data from the number of tris specified
+						var index = parseInt( data[ 1 ] );
+						var count = parseInt( data[ 2 ] );
+
+						for ( var j = index; j < index + count; j += 3 ) {
+
+							// The vertex, uv and normal arrays are always perfectly aligned, so use same indices into each
+							state.addFace(
+								state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ],
+								state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ],
+								state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ]
 							);
-							state.normals.push(
-								parseFloat( data[ 4 ] ),
-								parseFloat( data[ 5 ] ),
-								parseFloat( data[ 6 ] )
-							);
-							state.uvs.push(
-								parseFloat( data[ 7 ] ),
-								parseFloat( data[ 8 ] )
-							);
-							/*state.colors.push(
-								Math.random(),
-								Math.random(),
-								Math.random()
-							);*/
-							break;
 
-					}
+						}
 
-				} else if ( lineFirstChar === 'T' ) {
+						break;
 
-					var data = line.split( /\s+/ );
+					case 'VT':
+						state.vertices.push(
+							parseFloat( data[ 1 ] ),
+							parseFloat( data[ 2 ] ),
+							parseFloat( data[ 3 ] )
+						);
+						state.normals.push(
+							parseFloat( data[ 4 ] ),
+							parseFloat( data[ 5 ] ),
+							parseFloat( data[ 6 ] )
+						);
+						state.uvs.push(
+							parseFloat( data[ 7 ] ),
+							parseFloat( data[ 8 ] )
+						);
+						/*state.colors.push(
+							Math.random(),
+							Math.random(),
+							Math.random()
+						);*/
+						break;
 
-					switch ( data[ 0 ] ) {
+					case 'POINT_COUNTS':
+						// Lines we are ignoring right now (some may be implemented later)
+						break;
 
-						case 'TEXTURE':
-							break;
+					default:
 
-						case 'TEXTURE_LIT':
-							break;
+						// Handle null terminated files without exception
+						if ( line === '\0' ) continue;
 
-						case 'TRIS':
-							// Build our face data from the number of tris specified
-							var index = parseInt( data[ 1 ] );
-							var count = parseInt( data[ 2 ] );
-
-							for ( var j = index; j < index + count; j += 3 ) {
-
-								// The vertex, uv and normal arrays are always perfectly aligned, so use same indices into each
-								state.addFace(
-									state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ],
-									state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ],
-									state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ]
-								);
-
-							}
-
-							break;
-
-					}
-
-				} else if ( lineFirstChar === 'I' ) {
-
-					var data = line.split( /\s+/ );
-
-					switch ( data[ 0 ] ) {
-
-						case 'IDX10':
-							for ( var j = 1; j < 11; j ++ ) {
-
-								state.indices.push( parseInt( data[ j ] ) );
-
-							}
-
-							break;
-
-						case 'IDX':
-							state.indices.push( parseInt( data[ 1 ] ) );
-							break;
-
-					}
-
-				} else {
-
-					// Handle null terminated files without exception
-					if ( line === '\0' ) continue;
-
-					throw new Error( 'THREE.XPlaneObjLoader: Unexpected line: "' + line + '"' );
+						throw new Error( 'THREE.XPlaneObjLoader: Unexpected line: "' + line + '"' );
 
 				}
 
