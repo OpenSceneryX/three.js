@@ -5,11 +5,6 @@
 
 THREE.XPlaneObjLoader = ( function () {
 
-	// mtllib file_reference
-	var material_library_pattern = /^mtllib /;
-	// usemtl material_name
-	var material_use_pattern = /^usemtl /;
-
 	function ParserState() {
 
 		var state = {
@@ -26,7 +21,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 				if ( this.object && typeof this.object._finalize === 'function' ) {
 
-					this.object._finalize( true );
+					this.object._finalize( );
 
 				}
 
@@ -42,39 +37,25 @@ THREE.XPlaneObjLoader = ( function () {
 					materials: [],
 					smooth: true,
 
-					startMaterial: function ( name, libraries ) {
-
-						var previous = this._finalize( false );
-
-						// New usemtl declaration overwrites an inherited material, except if faces were declared
-						// after the material, then it must be preserved for proper MultiMaterial continuation.
-						if ( previous && ( previous.inherited || previous.groupCount <= 0 ) ) {
-
-							this.materials.splice( previous.index, 1 );
-
-						}
+					startMaterial: function ( name ) {
 
 						var material = {
 							index: this.materials.length,
 							name: name || '',
-							mtllib: ( Array.isArray( libraries ) && libraries.length > 0 ? libraries[ libraries.length - 1 ] : '' ),
-							smooth: ( previous !== undefined ? previous.smooth : this.smooth ),
-							groupStart: ( previous !== undefined ? previous.groupEnd : 0 ),
-							groupEnd: - 1,
-							groupCount: - 1,
-							inherited: false,
+							smooth: this.smooth,
+							groupStart: 0,
+							groupEnd: -1,
+							groupCount: -1,
 
 							clone: function ( index ) {
 
 								var cloned = {
 									index: ( typeof index === 'number' ? index : this.index ),
 									name: this.name,
-									mtllib: this.mtllib,
 									smooth: this.smooth,
 									groupStart: 0,
 									groupEnd: - 1,
 									groupCount: - 1,
-									inherited: false
 								};
 								cloned.clone = this.clone.bind( cloned );
 								return cloned;
@@ -100,10 +81,10 @@ THREE.XPlaneObjLoader = ( function () {
 
 					},
 
-					_finalize: function ( end ) {
+					_finalize: function ( ) {
 
 						// Guarantee at least one empty material, this makes the creation later more straight forward.
-						if ( end && this.materials.length === 0 ) {
+						if ( this.materials.length === 0 ) {
 
 							this.materials.push( {
 								name: '',
@@ -111,8 +92,6 @@ THREE.XPlaneObjLoader = ( function () {
 							} );
 
 						}
-
-						return this.currentMaterial();
 
 					}
 				};
@@ -125,7 +104,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 				if ( this.object && typeof this.object._finalize === 'function' ) {
 
-					this.object._finalize( true );
+					this.object._finalize( );
 
 				}
 
@@ -375,7 +354,7 @@ THREE.XPlaneObjLoader = ( function () {
 			// Faster to just trim left side of the line. Use if available.
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
 
-			for ( var i = 0, l = lines.length; i < l; i ++ ) {
+			for ( var i = 0, l = lines.length; i < l; i++ ) {
 
 				line = lines[ i ];
 				line = trimLeft ? line.trimLeft() : line.trim();
@@ -391,7 +370,7 @@ THREE.XPlaneObjLoader = ( function () {
 				switch ( data[ 0 ] ) {
 
 					case 'IDX10':
-						for ( var j = 1; j < 11; j ++ ) {
+						for ( var j = 1; j < 11; j++ ) {
 
 							state.indices.push( parseInt( data[ j ] ) );
 
@@ -631,5 +610,3 @@ THREE.XPlaneObjLoader = ( function () {
 	return XPlaneObjLoader;
 
 } )();
-
-
