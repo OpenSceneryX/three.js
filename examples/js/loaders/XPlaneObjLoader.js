@@ -22,19 +22,7 @@ THREE.XPlaneObjLoader = ( function () {
 			uvs: [],
 			indices: [],
 
-			materialLibraries: [],
-
-			startObject: function ( name, fromDeclaration ) {
-
-				// If the current object (initial from reset) is not from a g/o declaration in the parsed
-				// file. We need to use it for the first parsed g/o to keep things in sync.
-				if ( this.object && this.object.fromDeclaration === false ) {
-
-					this.object.name = name;
-					this.object.fromDeclaration = ( fromDeclaration !== false );
-					return;
-
-				}
+			startObject: function ( name ) {
 
 				if ( this.object && typeof this.object._finalize === 'function' ) {
 
@@ -44,7 +32,6 @@ THREE.XPlaneObjLoader = ( function () {
 
 				this.object = {
 					name: name || '',
-					fromDeclaration: ( fromDeclaration !== false ),
 
 					geometry: {
 						vertices: [],
@@ -311,7 +298,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 		};
 
-		state.startObject( '', false );
+		state.startObject( '' );
 
 		return state;
 
@@ -500,7 +487,6 @@ THREE.XPlaneObjLoader = ( function () {
 			state.finalize();
 
 			var container = new THREE.Group();
-			container.materialLibraries = [].concat( state.materialLibraries );
 
 			for ( var i = 0, l = state.objects.length; i < l; i ++ ) {
 
