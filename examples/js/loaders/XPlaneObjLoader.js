@@ -268,8 +268,7 @@ THREE.XPlaneObjLoader = ( function () {
 						break;
 
 					case 'TEXTURE':
-						var parts = data[ 1 ].split( '/' );
-						this.loadTexture( parts[ parts.length - 1 ] );
+						this.loadTexture( this.path + data[ 1 ] );
 						break;
 
 					case 'TRIS':
