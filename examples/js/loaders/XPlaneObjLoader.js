@@ -231,10 +231,15 @@ THREE.XPlaneObjLoader = ( function () {
 			var line = '';
 			var foundLOD = false;
 
+			// Faster to just trim left side of the line. Use if available.
+			var trimLeft = ( typeof ''.trimLeft === 'function' );
+
 			lineloop:
 			for ( var i = 0, l = lines.length; i < l; i++ ) {
 
 				line = lines[ i ];
+
+				line = trimLeft ? line.trimLeft() : line.trim();
 
 				// Ignore various unimportant lines
 				if ( line.length === 0 ) continue;
