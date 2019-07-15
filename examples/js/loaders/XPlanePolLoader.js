@@ -115,6 +115,8 @@ THREE.XPlanePolLoader = ( function () {
 			// Faster to just trim left side of the line. Use if available.
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
 
+			var scaleH, scaleV = 1;
+
 			for ( var i = 0, l = lines.length; i < l; i++ ) {
 
 				line = lines[ i ];
@@ -134,6 +136,11 @@ THREE.XPlanePolLoader = ( function () {
 						this.loadTexture( this.path + data[ 1 ] );
 						break;
 
+					case 'SCALE':
+						scaleH = parseFloat(data[ 1 ]);
+						scaleV = parseFloat(data[ 2 ]);
+						break;
+
 					case 'BUMP_LEVEL':
 					case 'DECAL':
 					case 'DECAL_KEYED':
@@ -147,7 +154,6 @@ THREE.XPlanePolLoader = ( function () {
 					case 'NO_ALPHA':
 					case 'NO_BLEND':
 					case 'NO_SHADOW':
-					case 'SCALE':
 					case 'SPECULAR':
 					case 'SURFACE':
 					case 'TEXTURE_CONTROL':
@@ -172,13 +178,13 @@ THREE.XPlanePolLoader = ( function () {
 			var container = new THREE.Group();
 
 			// Create underlying surface to provide contrast for our polygon
-			var geometry = new THREE.BoxGeometry( 2, 0.01, 2 );
+			var geometry = new THREE.BoxGeometry( 1.5, 0.01, 1.5 );
 			var material = new THREE.MeshBasicMaterial( { color: 0x00aa00 } );
 			var plane = new THREE.Mesh( geometry, material );
 			container.add( plane );
 
-			// Create polygon
-			var geometry = new THREE.BoxGeometry( 1, 0.01, 1 );
+			// Create polygon, dimensions proportional to loaded texture
+			var geometry = new THREE.BoxGeometry( scaleH / Math.max( scaleH, scaleV ), 0.01, scaleV / Math.max( scaleH, scaleV ) );
 			var polygon = new THREE.Mesh( geometry, this.material );
 			container.add( polygon );
 			polygon.translateY( 0.001 );
