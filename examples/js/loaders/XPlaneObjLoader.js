@@ -258,6 +258,10 @@ THREE.XPlaneObjLoader = ( function () {
 			var lines = text.split( '\n' );
 			var line = '';
 			var foundLOD = false;
+			// Our rudimentary animation approach is draw ONE set of mesh for each animation nesting level, i.e. the first mesh encountered at that level
+			// animNest tracks the current nesting level. animTrack is an array of booleans - as we encounter mesh at each nesting level, that index is set to true in the array
+			var animNest = 0;
+			var animTrack = [];
 
 			// Faster to just trim left side of the line. Use if available.
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
@@ -277,8 +281,16 @@ THREE.XPlaneObjLoader = ( function () {
 
 				switch ( data[ 0 ] ) {
 
+					case 'ANIM_begin':
+						animNest++;
+						break;
+
+					case 'ANIM_end':
+						animNest--;
+						break;
+
 					case 'ATTR_LOD':
-						// Ignore everything after second LOD. This could be improved to detect the closest LOD or even to be able to pick a LOD from the model.
+						// Ignore everything after second LOD. This could be improved to detect the closest LOD or even to be able to select a LOD from the model.
 						if ( foundLOD ) break lineloop;
 						else foundLOD = true;
 						break;
@@ -297,6 +309,11 @@ THREE.XPlaneObjLoader = ( function () {
 						break;
 
 					case 'LINES':
+						// If we already have mesh at this animation nesting level, ignore any further
+						if (animNest > 0 && animTrack[animNest]) break;
+						// Ignore any further animated mesh at this level
+						if (animNest > 0) animTrack[animNest] = true;
+
 						// TODO: Implement lines
 						break;
 
@@ -305,6 +322,11 @@ THREE.XPlaneObjLoader = ( function () {
 						break;
 
 					case 'TRIS':
+						// If we already have mesh at this animation nesting level, ignore any further
+						if (animNest > 0 && animTrack[animNest]) break;
+						// Ignore any further animated mesh at this level
+						if (animNest > 0) animTrack[animNest] = true;
+
 						// Build our face data from the number of tris specified
 						var index = parseInt( data[ 1 ] );
 						var count = parseInt( data[ 2 ] );
@@ -348,8 +370,6 @@ THREE.XPlaneObjLoader = ( function () {
 						);*/
 						break;
 
-					case 'ANIM_begin':
-					case 'ANIM_end':
 					case 'ANIM_hide':
 					case 'ANIM_keyframe_loop':
 					case 'ANIM_rotate':
