@@ -189,10 +189,20 @@ THREE.XPlaneObjLoader = ( function () {
 
 			var scope = this;
 			var textureLoader = new THREE.TextureLoader();
+			var ddsLoader = new THREE.DDSLoader();
 
-			textureLoader.load(
+			// Spec says that even if the specified texture has a .png suffix, X-Plane will attempt to load a DDS
+			// texture with equivalent .dds extension first. So we do the same.
+			var splitPath = path.split('.');
+			// Remove extension
+			splitPath.pop();
+
+			var ddsPath = splitPath.concat(['dds']).join('.');
+			var pngPath = splitPath.concat(['png']).join('.');
+
+			ddsLoader.load(
 				// resource URL
-				path,
+				ddsPath,
 
 				// onLoad callback
 				function ( texture ) {
@@ -206,7 +216,25 @@ THREE.XPlaneObjLoader = ( function () {
 
 				// onError callback
 				function ( err ) {
-					console.error( 'Could not load texture:' + path );
+					textureLoader.load(
+						// resource URL
+						pngPath,
+
+						// onLoad callback
+						function ( texture ) {
+							scope.material.map = texture;
+							scope.material.map.needsUpdate = true;
+							scope.material.needsUpdate = true;
+						},
+
+						// onProgress callback
+						undefined,
+
+						// onError callback
+						function ( err ) {
+							console.error( 'Could not load texture. Tried ' + ddsPath + ' and ' + pngPath );
+						}
+					);
 				}
 			);
 
