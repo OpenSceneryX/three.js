@@ -456,6 +456,13 @@ THREE.XPlaneObjLoader = ( function () {
 					case 'ATTR_specular_rgb':
 					case 'BUMP_LEVEL':
 					case 'COCKPIT_REGION':
+					case 'DECAL':
+					case 'DECAL_KEYED':
+					case 'DECAL_LIB':
+					case 'DECAL_PARAMS':
+					case 'DECAL_PARAMS_PROJ':
+					case 'DECAL_RGBA':
+					case 'DITHER_ALPHA':
 					case 'IF':
 					case 'ELSE':
 					case 'EMITTER':
@@ -472,6 +479,7 @@ THREE.XPlaneObjLoader = ( function () {
 					case 'LIGHT_SPILL_CUSTOM':
 					case 'LIGHTS':
 					case 'MAGNET':
+					case 'NO_ALPHA':
 					case 'NO_BLEND':
 					case 'NO_SHADOW':
 					case 'POINT_COUNTS':
@@ -482,11 +490,14 @@ THREE.XPlaneObjLoader = ( function () {
 					case 'smoke_black':
 					case 'smoke_white':
 					case 'SPECULAR':
+					case 'TEXTURE_CONTROL':
+					case 'TEXTURE_DETAIL':
 					case 'TEXTURE_LIT':
 					case 'TEXTURE_LIT_NOWRAP':
 					case 'TEXTURE_NORMAL':
 					case 'TEXTURE_NORMAL_NOWRAP':
 					case 'TEXTURE_NOWRAP':
+					case 'TEXTURE_TILE':
 					case 'TILTED':
 					case 'TWO_SIDED':
 					case 'VLIGHT':
