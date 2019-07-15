@@ -208,6 +208,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 				// onLoad callback
 				function ( texture ) {
+					texture.anisotropy = 16;
 					scope.material.map = texture;
 					scope.material.map.needsUpdate = true;
 					scope.material.needsUpdate = true;
@@ -224,6 +225,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 						// onLoad callback
 						function ( texture ) {
+							texture.anisotropy = 16;
 							scope.material.map = texture;
 							scope.material.map.needsUpdate = true;
 							scope.material.needsUpdate = true;
@@ -522,8 +524,6 @@ THREE.XPlaneObjLoader = ( function () {
 				var object = state.objects[ i ];
 				var geometry = object.geometry;
 				var material = this.material;
-				var isLine = ( geometry.type === 'Line' );
-				var isPoints = ( geometry.type === 'Points' );
 
 				if ( geometry.vertices.length === 0 ) continue;
 
@@ -555,25 +555,8 @@ THREE.XPlaneObjLoader = ( function () {
 				}
 
 				// Create mesh
-
-				var mesh;
-
-				if ( isLine ) {
-
-					mesh = new THREE.LineSegments( buffergeometry, material );
-
-				} else if ( isPoints ) {
-
-					mesh = new THREE.Points( buffergeometry, material );
-
-				} else {
-
-					mesh = new THREE.Mesh( buffergeometry, material );
-
-				}
-
+				var mesh = new THREE.Mesh( buffergeometry, material );
 				mesh.name = object.name;
-
 				container.add( mesh );
 
 			}
