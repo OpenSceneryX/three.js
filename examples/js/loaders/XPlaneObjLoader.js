@@ -55,14 +55,14 @@ THREE.XPlaneObjLoader = ( function () {
 
 			},
 
-			addVertex: function ( a, b, c ) {
+			addVertex: function ( a, b, c, transx, transy, transz ) {
 
 				var src = this.vertices;
 				var dst = this.object.geometry.vertices;
 
-				dst.push( src[ a + 0 ], src[ a + 1 ], src[ a + 2 ] );
-				dst.push( src[ b + 0 ], src[ b + 1 ], src[ b + 2 ] );
-				dst.push( src[ c + 0 ], src[ c + 1 ], src[ c + 2 ] );
+				dst.push( src[ a + 0 ] + transx, src[ a + 1 ] + transy, src[ a + 2 ] + transz );
+				dst.push( src[ b + 0 ] + transx, src[ b + 1 ] + transy, src[ b + 2 ] + transz );
+				dst.push( src[ c + 0 ] + transx, src[ c + 1 ] + transy, src[ c + 2 ] + transz );
 
 			},
 
@@ -99,7 +99,7 @@ THREE.XPlaneObjLoader = ( function () {
 
 			},
 
-			addFace: function ( a, b, c, ua, ub, uc, na, nb, nc ) {
+			addFace: function ( a, b, c, ua, ub, uc, na, nb, nc, transx, transy, transz ) {
 
 				var vLen = this.vertices.length;
 
@@ -107,7 +107,7 @@ THREE.XPlaneObjLoader = ( function () {
 				var ib = this.parseVertexIndex( b, vLen );
 				var ic = this.parseVertexIndex( c, vLen );
 
-				this.addVertex( ia, ib, ic );
+				this.addVertex( ia, ib, ic, transx, transy, transz );
 
 				if ( ua !== undefined && ua !== '' ) {
 
@@ -262,6 +262,8 @@ THREE.XPlaneObjLoader = ( function () {
 			// animNest tracks the current nesting level. animTrack is an array of booleans - as we encounter mesh at each nesting level, that index is set to true in the array
 			var animNest = 0;
 			var animTrack = [];
+			// We need to track translations, as in some models animated sections _always_ have some translation. If we don't do this, animated parts may appear in odd places.
+			var animTrans = [0, 0, 0];
 
 			// Faster to just trim left side of the line. Use if available.
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
@@ -287,6 +289,14 @@ THREE.XPlaneObjLoader = ( function () {
 
 					case 'ANIM_end':
 						animNest--;
+						// Clear any stored translation
+						animTrans = [0, 0, 0];
+						break;
+
+					case 'ANIM_trans':
+						// There can be multiple ANIM_trans in a single animated block, often used to translate, rotate, then translate back. We therefore need to add the
+						// translations together
+						animTrans = [ animTrans[ 0 ] + parseFloat(data[ 1 ]), animTrans[ 1 ] + parseFloat(data[ 2 ]), animTrans[ 2 ] + parseFloat(data[ 3 ])];
 						break;
 
 					case 'ATTR_LOD':
@@ -337,7 +347,8 @@ THREE.XPlaneObjLoader = ( function () {
 							state.addFace(
 								state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ],
 								state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ],
-								state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ]
+								state.indices[ j ], state.indices[ j + 1 ], state.indices[ j + 2 ],
+								animTrans[ 0 ], animTrans[ 1 ], animTrans[ 2 ]
 							);
 
 						}
@@ -377,7 +388,6 @@ THREE.XPlaneObjLoader = ( function () {
 					case 'ANIM_rotate_end':
 					case 'ANIM_rotate_key':
 					case 'ANIM_show':
-					case 'ANIM_trans':
 					case 'ANIM_trans_begin':
 					case 'ANIM_trans_end':
 					case 'ANIM_trans_key':
