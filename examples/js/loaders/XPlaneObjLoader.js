@@ -154,8 +154,10 @@ THREE.XPlaneObjLoader = ( function () {
 
 		this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
-		this.material = new THREE.MeshStandardMaterial();
-		this.material.side = THREE.BackSide;
+		this.material = new THREE.MeshLambertMaterial();
+		// This is a bit naughty. We should really use THREE.BackSide but some animated segments only contain separate sides of the model in different animated sections,
+		// which we are ignoring for the moment. Should revert this once animations are implemented.
+		this.material.side = THREE.DoubleSide;
 		this.material.transparent = true;
 
 	}
