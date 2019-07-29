@@ -12,6 +12,9 @@ THREE.XPlaneForLoader = ( function () {
 		this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
 		this.material = new THREE.MeshLambertMaterial();
+		this.material.side = THREE.DoubleSide;
+		// Set alphaTest to get a good result for transparent textures. See https://threejsfundamentals.org/threejs/lessons/threejs-transparency.html
+		this.material.alphaTest = 0.5;
 		this.material.transparent = true;
 
 	}
@@ -117,9 +120,9 @@ THREE.XPlaneForLoader = ( function () {
 			// Faster to just trim left side of the line. Use if available.
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
 
-			var scaleX, scaleY = 1;
-			var spacingX, spacingZ = 1;
-			var randomX, randomZ = 1;
+			var scaleX, scaleY = 256;
+			var spacingX, spacingZ = 30;
+			var randomX, randomZ = 0;
 			var trees = [];
 
 			for ( var i = 0, l = lines.length; i < l; i++ ) {
@@ -222,18 +225,75 @@ THREE.XPlaneForLoader = ( function () {
 			container.add( plane );
 
 			// Create trees, dimensions proportional to loaded texture
-			var geometry = new THREE.PlaneGeometry( scaleX / Math.max( scaleX, scaleY ), scaleY / Math.max( scaleX, scaleY ) );
-			var tree = new THREE.Mesh( geometry, this.material );
-			container.add( tree );
-			tree.translateY( 0.001 );
+			for ( var i = 0; i < plantedTrees.length; i++ ) {
+				this.addTree( container, plantedTrees[i], i, spacingX, spacingZ, randomX, randomZ, scaleX, scaleY );
+			}
+
+			//var geometry = new THREE.PlaneGeometry( scaleX / Math.max( scaleX, scaleY ), scaleY / Math.max( scaleX, scaleY ) );
+			//var tree = new THREE.Mesh( geometry, this.material );
+			//container.add( tree );
+			//tree.translateY( 0.001 );
 
 			console.timeEnd( 'XPlaneForLoader' );
 
 			return container;
 
-		}//,
+		},
 
-		//addTree: function ( container, x, z,  ) {
+		addTree: function ( container, treeData, index, spacingX, spacingZ, randomX, randomZ, scaleX, scaleY ) {
+			// treeData: <s> <t> <w> <y> <offset> <frequency> <min height> <max height> <quads> <type>
+			var treeH = treeData[6] + Math.random() * ( treeData[7] - treeData[6] );
+			var treeW = treeH * treeData[2] / treeData[3];
+			var treeX = ( index % treesPerRow ) * spacingX + randomX * ( 2.0 * Math.random() - 1.0 );
+			var treeZ = ( index / treesPerRow ) * spacingZ + randomZ * ( 2.0 * Math.random() - 1.0 );
+			var treeRotation = Math.random();
+
+			var vertices = [];
+			var normals = [];
+			var uvs = [];
+
+			var scope = this
+
+			for ( var i = 0; i < treeData[8]; i++ ) {
+				var quadRotation = Math.PI * ( treeRotation + i / treeData[8] );        // tree rotation
+				var quadX = treeW * Math.sin( quadRotation );
+				var quadZ = treeW * Math.cos( quadRotation );
+
+				// Tri 1
+				vertices.push( treeX - quadX * ( treeData[4] / treeData[2] ), 0.0, treeZ - quadZ * ( treeData[4] / treeData[2] ) );
+				normals.push( 0.0, 1.0, 0.0 );
+				uvs.push( treeData[0] / scaleX, 1 - treeData[1] / scaleY );
+
+				vertices.push( treeX + quadX * ( 1.0 - treeData[4] / treeData[2] ), 0.0, treeZ + quadZ * ( 1.0 - treeData[4] / treeData[2] ) );
+				normals.push( 0.0, 1.0, 0.0 );
+				uvs.push( ( treeData[0] + treeData[2] ) / scaleX, 1 - treeData[1] / scaleY );
+
+				vertices.push( treeX + quadX * ( 1.0 - treeData[4] / treeData[2] ), treeH, treeZ + quadZ * ( 1.0 - treeData[4] / treeData[2] ) );
+				normals.push( 0.0, 1.0, 0.0 );
+				uvs.push( ( treeData[0] + treeData[2] ) / scaleX, 1 - ( treeData[1] + treeData[3] ) / scaleY );
+
+				// Tri 2
+				vertices.push( treeX - quadX * ( treeData[4] / treeData[2] ), 0.0, treeZ - quadZ * ( treeData[4] / treeData[2] ) );
+				normals.push( 0.0, 1.0, 0.0 );
+				uvs.push( treeData[0] / scaleX, 1 - treeData[1] / scaleY );
+
+				vertices.push( treeX + quadX * ( 1.0 - treeData[4] / treeData[2] ), treeH, treeZ + quadZ * ( 1.0 - treeData[4] / treeData[2] ) );
+				normals.push( 0.0, 1.0, 0.0 );
+				uvs.push( ( treeData[0] + treeData[2] ) / scaleX, 1 - ( treeData[1] + treeData[3] ) / scaleY );
+
+				vertices.push( treeX - quadX * (treeData[4] / treeData[2] ), treeH, treeZ - quadZ * ( treeData[4] / treeData[2] ) );
+				normals.push( 0.0, 1.0, 0.0 );
+				uvs.push( treeData[0] / scaleX, 1 - ( treeData[1] + treeData[3] ) / scaleY );
+			}
+
+			var geometry = new THREE.BufferGeometry( );
+			geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+			geometry.addAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+			geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+
+			var polygon = new THREE.Mesh( geometry, scope.material );
+			container.add( polygon );
+		}
 
 	};
 
