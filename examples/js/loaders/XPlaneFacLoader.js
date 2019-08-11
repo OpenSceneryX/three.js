@@ -184,23 +184,14 @@ THREE.XPlaneFacLoader = ( function () {
 			// Faster to just trim left side of the line. Use if available.
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
 
-			var ring = true;
-			var roof = false;
-			var floorsMin = 1.0;
-			var floorsMax = 9999.0;
-			var roofSlope = 0.0;
-			var roofHeight = 0.0;
-			var scaleX = 20.0;
-			var scaleY = 20.0;
+			var facadeInfo = this.getFacadeInfo();
+			var facadeTmpl = this.getFacadeTemplate();
 
-			var walls = [];
-
-			var roofUV = [ 0.0, 0.0, 1.0, 1.0 ];
-			var texSizeX = 1024.0;
-			var texSizeY = 1024.0;
-
+			var scaleS = 1.0;
+			var scaleT = 1.0;
 			var roofSection = false;
-			var noRoofMesh = false;
+			var nearestLOD = true;
+
 
 			for ( var i = 0, l = lines.length; i < l; i++ ) {
 
@@ -211,48 +202,17 @@ THREE.XPlaneFacLoader = ( function () {
 				if ( line.length === 0 ) continue;
 				// Note that we fail on '1000' as we don't handle type 2 facades yet
 				if ( line.charAt( 0 ) === '#' || line === 'I' || line === 'A' || line === '800' || line === 'FACADE' ) continue;
+				if ( line === '1000' ) {
+					facadeInfo.type = 2;
+					continue;
+				}
 
 				var data = line.split( /\s+/ );
 
-				switch ( data[ 0 ] ) {
+				if ( data[ 0 ] == 'LOD' ) nearestLOD = (parseFloat(data[ 1 ]) == 0);
+				if ( !nearestLOD ) continue;
 
-					case 'RING':
-						ring = parseInt(data[ 1 ]) > 0;
-						break;
-
-					case 'ROOF':
-						roofSection = true;
-						roof = true;
-						break;
-
-					case 'NO_ROOF_MESH':
-						noRoofMesh = true;
-						break;
-
-					case 'ROOF_SCALE':
-						roof = true;
-						roofUV[0] = parseFloat(data[ 1 ]) / texSizeX;
-						roofUV[1] = parseFloat(data[ 2 ]) / texSizeY;
-						roofUV[2] = parseFloat(data[ 5 ]) / texSizeX;
-						roofUV[3] = parseFloat(data[ 6 ]) / texSizeY;
-						break;
-
-					case 'FLOORS_MIN':
-						floorsMin = parseFloat(data[ 1 ]);
-						break;
-
-					case 'FLOORS_MAX':
-						floorsMax = parseFloat(data[ 1 ]);
-						break;
-
-					case 'ROOF_HEIGHT':
-						roof = true;
-						roofHeight = parseFloat(data[ 1 ]);
-						break;
-
-					case 'ROOF_SLOPE':
-						roofSlope = parseFloat(data[ 1 ]);
-						break;
+				switch ( data[ 0 ] ) { // Common Facade Commands
 
 					case 'SHADER_ROOF':
 						roofSection = true;
@@ -262,20 +222,6 @@ THREE.XPlaneFacLoader = ( function () {
 						roofSection = false;
 						break;
 
-					case 'WALL':
-						var wall = {
-							vert: [0.0, 0.0, 0.0, 0.0],
-							hori: [0.0, 0.0, 0.0, 0.0],
-							minW: parseFloat(data[ 1 ]),
-							maxW: parseFloat(data[ 2 ])
-						}
-						roofSection = false;
-						walls.push( wall );
-						break;
-
-					case 'FLOOR':
-						break;
-
 					case 'TEXTURE':
 						if (roofSection)
 							this.loadRoofTexture( this.path + data[ 1 ] );
@@ -283,70 +229,188 @@ THREE.XPlaneFacLoader = ( function () {
 							this.loadWallTexture( this.path + data[ 1 ] );
 						break;
 
-					case 'SCALE':
-						scaleX = parseFloat(data[ 1 ]);
-						scaleY = parseFloat(data[ 2 ]);
-						break;
+					case 'WALL':
+						roofSection = false;
 
-					case 'TEX_SIZE':
-						texSizeX = parseFloat(data[ 1 ]);
-						texSizeY = parseFloat(data[ 2 ]);
-						break;
-
-					case 'BOTTOM':
-						var x = parseFloat(data[ 1 ]) / texSizeY;
-						if (walls[walls.length - 1].vert[1] == 0.0) walls[walls.length - 1].vert[0] = x;
-						walls[walls.length - 1].vert[1] = parseFloat(data[ 2 ]) / texSizeY;
-						break;
-
-					case 'MIDDLE':
-						var x = parseFloat(data[ 1 ]) / texSizeY;
-						walls[walls.length - 1].vert[2] = parseFloat(data[ 2 ]) / texSizeY;
-						if ( walls[walls.length - 1].vert[1] == 0.0 ) {
-							walls[walls.length - 1].vert[0] = x;
-							walls[walls.length - 1].vert[1] = walls[walls.length - 1].vert[2];
+						if ( facadeInfo.type == 1 ) {
+							facade.walls.push(this.getWallTemplate());
+						} else {
+							var wallTemplate = this.getV2FacadeWallTemplate();
+							var wallFilterTemplate = this.getV2FacadeWallFilterTemplate();
+							wallFilterTemplate.minWidth = parseFloat(data[ 1 ]);
+							wallFilterTemplate.maxWidth = parseFloat(data[ 2 ]);
+							wallFilterTemplate.minHeading = parseFloat(data[ 3 ]);
+							wallFilterTemplate.maxHeading = parseFloat(data[ 4 ]);
+							wallTemplate.filters.push(wallFilterTemplate);
+							facadeInfo.floors[facadeInfo.floors[length - 1]].walls.push(wallTemplate);
 						}
+
 						break;
 
-					case 'TOP':
-						walls[walls.length - 1].vert[3] = parseFloat(data[ 2 ]) / texSizeY;
+					case 'RING':
+						facadeInfo.isRing = parseInt(data[ 1 ]) > 0;
 						break;
 
-					case 'LEFT':
-						var x = parseFloat(data[ 1 ]) / texSizeX;
-						if ( walls[walls.length - 1].hori[1] == 0.0 ) walls[walls.length - 1].hori[0] = x;
-						walls[walls.length - 1].hori[1] = parseFloat(data[ 2 ]) / texSizeX;
-						break;
-
-					case 'CENTER':
-						var x = parseFloat(data[ 1 ]) / texSizeX;
-						if ( walls[walls.length - 1].hori[1] == 0.0 ) {
-							walls[walls.length - 1].hori[1] = x;
-							walls[walls.length - 1].hori[0] = x;
-						}
-						walls[walls.length - 1].hori[2] = parseFloat(data[ 2 ]) / texSizeX;
-						break;
-
-					case 'RIGHT':
-						walls[walls.length - 1].hori[3] = parseFloat(data[ 2 ]) / texSizeX;
-						break;
-
-					case 'LAYER_GROUP':
-					case 'NO_BLEND':
 					case 'TWO_SIDED':
-					case 'LOD':
+						facadeInfo.twoSided = parseInt(data[ 1 ]) > 0;
+						break;
+
+					case 'FACADE_SCRAPER':
+					case 'FACADE_SCRAPER_MODEL':
+					case 'FACADE_SCRAPER_MODEL_OFFSET':
 						// Lines we are ignoring right now (some may be implemented later)
 						break;
 
-					default:
-
-						// Handle null terminated files without exception
-						if ( line === '\0' ) continue;
-
-						throw new Error( 'THREE.XPlaneFacLoader: Unexpected line: "' + line + '"' );
-
 				}
 
+				if ( facadeInfo.type == 1 ) { // Type 1 only Facade Commands
+
+					switch ( data[ 0 ] ) {
+						case 'SCALE':
+							facadeInfo.walls[facadeInfo.walls[length - 1]].xScale = parseFloat(data[ 1 ]);
+							facadeInfo.walls[facadeInfo.walls[length - 1]].yScale = parseFloat(data[ 2 ]);
+							break;
+
+						case 'ROOF_SLOPE':
+							facadeInfo.walls[facadeInfo.walls[length - 1]].roofSlope = parseFloat(data[ 1 ]);
+							if ( facadeInfo.walls[facadeInfo.walls[length - 1]].roofSlope >= 90.0 ||
+								facadeInfo.walls[facadeInfo.walls[length - 1]].roofSlope <= -90.0 ) {
+								facadeInfo.texCorrectSlope = true;
+							}
+
+							if ( data.length > 2 && data[ 2 ] == "SLANT") {
+								facadeInfo.texCorrectSlope = true;
+							}
+							break;
+
+						case 'BOTTOM':
+							var f1 = parseFloat(data[ 1 ]) * scaleT;
+							var f2 = parseFloat(data[ 2 ]) * scaleT;
+							facadeInfo.walls[facadeInfo.walls[length - 1]].tFloors.push([f1, f2]);
+							facadeInfo.walls[facadeInfo.walls[length - 1]].bottom++;
+							break;
+
+						case 'MIDDLE':
+							var f1 = parseFloat(data[ 1 ]) * scaleT;
+							var f2 = parseFloat(data[ 2 ]) * scaleT;
+							facadeInfo.walls[facadeInfo.walls[length - 1]].tFloors.push([f1, f2]);
+							facadeInfo.walls[facadeInfo.walls[length - 1]].middle++;
+							break;
+
+						case 'TOP':
+							var f1 = parseFloat(data[ 1 ]) * scaleT;
+							var f2 = parseFloat(data[ 2 ]) * scaleT;
+							facadeInfo.walls[facadeInfo.walls[length - 1]].tFloors.push([f1, f2]);
+							facadeInfo.walls[facadeInfo.walls[length - 1]].top++;
+							break;
+
+						case 'LEFT':
+							var f1 = parseFloat(data[ 1 ]) * scaleS;
+							var f2 = parseFloat(data[ 2 ]) * scaleS;
+							facadeInfo.walls[facadeInfo.walls[length - 1]].sPanels.push([f1, f2]);
+							facadeInfo.walls[facadeInfo.walls[length - 1]].left++;
+							break;
+
+						case 'CENTER':
+							var f1 = parseFloat(data[ 1 ]) * scaleS;
+							var f2 = parseFloat(data[ 2 ]) * scaleS;
+							facadeInfo.walls[facadeInfo.walls[length - 1]].sPanels.push([f1, f2]);
+							facadeInfo.walls[facadeInfo.walls[length - 1]].center++;
+							break;
+
+						case 'RIGHT':
+							var f1 = parseFloat(data[ 1 ]) * scaleS;
+							var f2 = parseFloat(data[ 2 ]) * scaleS;
+							facadeInfo.walls[facadeInfo.walls[length - 1]].sPanels.push([f1, f2]);
+							facadeInfo.walls[facadeInfo.walls[length - 1]].right++;
+							break;
+
+						case 'ROOF':
+							facadeInfo.roofS.push(parseFloat(data[ 1 ]) * scaleS);
+							facadeInfo.roofT.push(parseFloat(data[ 2 ]) * scaleT);
+							facadeInfo.hasRoof = true;
+							break;
+
+						case 'ROOF_SCALE':
+							facadeInfo.roofST[0] = parseFloat(data[ 1 ]) * scaleS;
+							facadeInfo.roofST[1] = parseFloat(data[ 2 ]) * scaleT;
+							var sCTR = parseFloat(data[ 3 ]) * scaleS;
+							var tCTR = parseFloat(data[ 4 ]) * scaleT;
+							facadeInfo.roofST[2] = parseFloat(data[ 5 ]) * scaleS;
+							facadeInfo.roofST[3] = parseFloat(data[ 6 ]) * scaleT;
+							var rsX = parseFloat(data[ 7 ]);
+							var rsY = parseFloat(data[ 8 ]);
+							var sRAT = (sCTR - facadeInfo.roofST[0]) / (facadeInfo.roofST[2] - facadeInfo.roofST[0]);  // fraction of tex below/left center point
+							var tRAT = (tCTR - facadeInfo.roofST[1]) / (facadeInfo.roofST[3] - facadeInfo.roofST[1]);
+							facadeInfo.roofAB[0] = -rsX * sRAT;          // number of meters that are below/left of center point, always negative
+							facadeInfo.roofAB[1] = -rsY * tRAT;
+							facadeInfo.roofAB[2] = facadeInfo.roofAB[0] + rsX;    // number of meters that are above/right of center point
+							facadeInfo.roofAB[3] = facadeInfo.roofAB[1] + rsY;
+							facadeInfo.hasRoof = true;
+							break;
+
+						case 'BASEMEMT_DEPTH':
+							facadeInfo.walls[facadeInfo.walls[length - 1]].basement = parseFloat(data[ 1 ]) * scaleT;
+							break;
+
+						case 'TEX_SIZE':
+							scaleS = parseFloat(data[ 1 ]);
+							scaleT = parseFloat(data[ 2 ]);
+							break;
+
+						case 'FLOORS_MIN':
+							facade.minFloors = parseFloat(data[ 1 ]);
+							break;
+
+						case 'FLOORS_MAX':
+							facade.maxFloors = parseFloat(data[ 1 ]);
+							break;
+
+						case 'DOUBLED':
+							facadeInfo.doubled = parseInt(data[ 1 ]) > 0;
+							break;
+
+						default:
+
+							// Handle null terminated files without exception
+							if ( line === '\0' ) continue;
+
+							throw new Error( 'THREE.XPlaneFacLoader: Unexpected line: "' + line + '"' );
+
+					}
+
+				} else { // Type 2 only Facade Commands
+
+					switch ( data[ 0 ] ) {
+
+						case 'OBJ':
+							facadeInfo.objs.push(data[ 1 ]);
+							break;
+
+						case 'FLOOR':
+							var facadeFloorTemplate = this.getV2FacadeFloorTemplate();
+							facadeFloorTemplate.roofSurface = 0;
+							facadeInfo.floors.push(facadeFloorTemplate);
+							break;
+
+						case 'SEGMENT':
+							facadeTmpl = this.getV2FacadeTemplate();
+							facadeInfo.floors[facadeInfo.floors.length - 1].templates.push(facadeTmpl);
+							break;
+
+						case 'SEGMENT_CURVED':
+							facadeTmpl = null;
+							break;
+
+						default:
+
+							// Handle null terminated files without exception
+							if ( line === '\0' ) continue;
+
+							throw new Error( 'THREE.XPlaneFacLoader: Unexpected line: "' + line + '"' );
+
+					}
+				}
 			}
 
 			var container = new THREE.Group();
@@ -358,6 +422,113 @@ THREE.XPlaneFacLoader = ( function () {
 
 			return container;
 
+		},
+
+		getFacadeInfo: function () {
+			return {
+				type: 1,
+				isRing: true,
+				doubled: false,
+				twoSided: false,
+				minFloors: 1,
+				maxFloors: 999,
+				hasRoof: false,
+				noRoofMesh: false,
+				noWallMesh: false,
+				scrapers: [],
+				floors: [],
+				objs: [],
+				roofScaleS: 0.0,
+				roofScaleT: 0.0,
+
+				texCorrectSlope: false,
+				walls: [],
+				roofS: [],
+				roofT: [],
+				roofST: [0.0, 0.0, 0.0, 0.0],
+				roofAB: [0.0, 0.0, 0.0, 0.0]
+			}
+		},
+
+		getV1FacadeWallTemplate: function() {
+			return {
+				xScale: 0.0,
+				yScale: 0.0,
+				basement: 0.0,
+				roofSlope: 0.0,
+				sPanels: [0.0, 0.0],
+				left: 0,
+				center: 0,
+				right: 0,
+				tFloors: [0.0, 0.0],
+				bottom: 0,
+				middle: 0,
+				top: 0
+			}
+		},
+
+		getV2FacadeTemplate: function () {
+			return {
+				object: {
+					index: 0,
+					xyzr: [0.0, 0.0, 0.0, 0.0]
+				},
+
+				mesh: {
+					xyz: [0.0, 0.0, 0.0],
+					uv: [0.0, 0.0],
+					idx: []
+				},
+
+				objs: [],
+				meshes: [],
+				bounds: [0.0, 0.0, 0.0]
+			}
+		},
+
+		getV2FacadeWallTemplate: function () {
+			return {
+				spellings: []
+			}
+		},
+
+		getV2FacadeRoofTemplate: function () {
+			return {
+				roofHeight: 0.0,
+				twoSided: 0,
+				roofObj: {
+					str: [0.0, 0.0, 0.0],
+					obj: 0
+				},
+				roofObjs: []
+			}
+		},
+
+		getV2FacadeFloorTemplate: function () {
+			return {
+				templates: [],
+				roofSurface: 0,
+				walls: [],
+				roofs: [],
+				max_roof_height: function() {
+					return this.roofs.length == 0 ? 0.0 : roofs[this.roofs.length].roof_height;
+				}
+			}
+		},
+
+		getV2FacadeWallFilterTemplate: function () {
+			return {
+				minWidth: 0.0,
+				maxWidth: 0.0,
+				minHeading: 0.0,
+				maxHeading: 0.0
+			}
+		},
+
+		getV2FacadeWallFiltersTemplate: function () {
+			return {
+				filters: []
+			}
 		},
 
 		addFacade: function ( container, walls, roofUV, scaleX, scaleY, floorsMin, floorsMax, ring, roof ) {
@@ -372,8 +543,6 @@ THREE.XPlaneFacLoader = ( function () {
 
 			var vertexList = [];
 			var uvList = [];
-
-			var scope = this;
 
 			if (walls.length == 0) return true;
 
@@ -419,7 +588,8 @@ THREE.XPlaneFacLoader = ( function () {
 				quads = 0;
 
 				for (var fl = 0; fl <= 1; fl++) {
-					x = z = 0.0;
+					x = 0.0;
+					z = 0.0;
 
 					if (fl) y += (walls[ 0 ].vert[ level + 2 ] - walls[ 0 ].vert[ level ]) * scaleY;   // height of each floor
 
@@ -470,7 +640,7 @@ THREE.XPlaneFacLoader = ( function () {
 			geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
 			geometry.addAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
 
-			var polygon = new THREE.Mesh( geometry, scope.wallMaterial );
+			var polygon = new THREE.Mesh( geometry, this.wallMaterial );
 			container.add( polygon );
 /*
 			vertices = [];
