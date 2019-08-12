@@ -185,7 +185,7 @@ THREE.XPlaneFacLoader = ( function () {
 			var trimLeft = ( typeof ''.trimLeft === 'function' );
 
 			var facadeInfo = this.getFacadeInfo();
-			var facadeTmpl = this.getFacadeTemplate();
+			var facadeTmpl = null;
 
 			var scaleS = 1.0;
 			var scaleT = 1.0;
@@ -402,6 +402,69 @@ THREE.XPlaneFacLoader = ( function () {
 							facadeTmpl = null;
 							break;
 
+						case 'MESH':
+							if (facadeTmpl) {
+								facadeTmpl.meshes.push(facadeTmpl.mesh());
+							}
+							break;
+
+						case 'VERTEX':
+							if (facadeTmpl) {
+								var mesh = facadeTmpl.meshes[facadeTmpl.meshes.length - 1];
+								mesh.xyz.push(parseFloat(data[ 1 ]));
+								mesh.xyz.push(parseFloat(data[ 2 ]));
+								mesh.xyz.push(parseFloat(data[ 3 ]));
+								mesh.uv.push(parseFloat(data[ 7 ]));
+								mesh.uv.push(parseFloat(data[ 8 ]));
+							}
+							break;
+
+						case 'IDX':
+							if (facadeTmpl) {
+								var mesh = facadeTmpl.meshes[facadeTmpl.meshes.length - 1];
+								for (var j = 1; j < data.length; j++) mesh.idx.push(parseInt(data[ j ]));
+							}
+							break;
+
+						case 'ATTACH_DRAPED':
+						case 'ATTACH_GRADED':
+							if (facadeTmpl) {
+								var object = facadeTmpl.object();
+								object.idx = parseInt(data[ 1 ]);
+								object.xyzr[0] = parseFloat(data[ 2 ]);
+								object.xyzr[1] = parseFloat(data[ 3 ]);
+								object.xyzr[2] = parseFloat(data[ 4 ]);
+								object.xyzr[3] = parseFloat(data[ 5 ]);
+								facadeTmpl.objs.push(object);
+							}
+							break;
+
+						case 'SPELLING':
+							var spelling = this.getV2FacadeSpelling();
+							for (var j = 1; j < data.length; j++) spelling.indices.push(parseInt(data[ j ]));
+							facadeInfo.floors[facadeInfo.floors.length - 1].walls[facadeInfo.walls.length - 1].spellings.push(spelling);
+							break;
+
+						case 'ROOF_HEIGHT':
+							for (var j = 1; j < data.length; j++)
+								facadeinfo.floors[facadeinfo.floors.length - 1].roofs.push(getV2FacadeRoofTemplate(parseFloat(data[ j ])));
+							facadeinfo.hasRoof = true;
+							break;
+
+						case 'ROOF_SCALE':
+							facadeInfo.roofScaleS = parseFloat(data[ 1 ]);
+							facadeInfo.roofScaleT = parseFloat(data[ 2 ]);
+							if (facadeInfo.roofScaleT == 0.0) facadeInfo.roofScaleT = facadeInfo.roofScaleS;
+							break;
+
+						case 'NO_ROOF_MESH':
+							facadeInfo.noRoofMesh = true;
+							break;
+
+						case 'NO_WALL_MESH':
+							facadeInfo.noWallMesh = true;
+							break;
+
 						default:
 
 							// Handle null terminated files without exception
@@ -469,15 +532,19 @@ THREE.XPlaneFacLoader = ( function () {
 
 		getV2FacadeTemplate: function () {
 			return {
-				object: {
-					index: 0,
-					xyzr: [0.0, 0.0, 0.0, 0.0]
+				object: function() {
+					return {
+						index: 0,
+						xyzr: [0.0, 0.0, 0.0, 0.0]
+					}
 				},
 
-				mesh: {
-					xyz: [0.0, 0.0, 0.0],
-					uv: [0.0, 0.0],
-					idx: []
+				mesh: function() {
+					return {
+						xyz: [0.0, 0.0, 0.0],
+						uv: [0.0, 0.0],
+						idx: []
+					}
 				},
 
 				objs: [],
@@ -492,9 +559,9 @@ THREE.XPlaneFacLoader = ( function () {
 			}
 		},
 
-		getV2FacadeRoofTemplate: function () {
+		getV2FacadeRoofTemplate: function (height) {
 			return {
-				roofHeight: 0.0,
+				roofHeight: height,
 				twoSided: 0,
 				roofObj: {
 					str: [0.0, 0.0, 0.0],
@@ -528,6 +595,24 @@ THREE.XPlaneFacLoader = ( function () {
 		getV2FacadeWallFiltersTemplate: function () {
 			return {
 				filters: []
+			}
+		},
+
+		getV2FacadeSpelling: function () {
+			return {
+				indices: [],
+				widths: [],
+				total: 0.0,
+
+				clear: function() {
+					this.indices = [];
+					this.widths = [];
+					this.total = 0.0;
+				},
+
+				empty: function() {
+					return this.indices.length == 0;
+				}
 			}
 		},
 
