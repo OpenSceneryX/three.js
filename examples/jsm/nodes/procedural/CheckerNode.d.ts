@@ -5,15 +5,16 @@ import { UVNode } from '../accessors/UVNode';
 import { UVTransformNode } from '../utils/UVTransformNode';
 
 export class CheckerNode extends TempNode {
-  constructor(uv?: UVNode | UVTransformNode);
 
-  uv: UVNode | UVTransformNode;
-  nodeType: string;
+	constructor( uv?: UVNode | UVTransformNode );
 
-  generate(builder: NodeBuilder, output: string): string;
-  copy(source: CheckerNode): this;
+	uv: UVNode | UVTransformNode;
+	nodeType: string;
 
-  static Nodes: {
-    checker: FunctionNode;
-  };
+	copy( source: CheckerNode ): this;
+
+	static Nodes: {
+		checker: FunctionNode;
+	};
+
 }

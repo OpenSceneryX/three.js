@@ -11,9 +11,11 @@ var WEBVR = {
 
 	createButton: function ( renderer, options ) {
 
+		console.warn( 'WEBVR.js has been deprecated. Use VRButton.js instead.' );
+
 		if ( options && options.referenceSpaceType ) {
 
-			renderer.vr.setReferenceSpaceType( options.referenceSpaceType );
+			renderer.xr.setReferenceSpaceType( options.referenceSpaceType );
 
 		}
 
@@ -45,7 +47,7 @@ var WEBVR = {
 
 			};
 
-			renderer.vr.setDevice( device );
+			renderer.xr.setDevice( device );
 
 		}
 
@@ -57,7 +59,7 @@ var WEBVR = {
 
 				session.addEventListener( 'end', onSessionEnded );
 
-				renderer.vr.setSession( session );
+				renderer.xr.setSession( session );
 				button.textContent = 'EXIT XR';
 
 				currentSession = session;
@@ -68,7 +70,7 @@ var WEBVR = {
 
 				currentSession.removeEventListener( 'end', onSessionEnded );
 
-				renderer.vr.setSession( null );
+				renderer.xr.setSession( null );
 				button.textContent = 'ENTER XR';
 
 				currentSession = null;
@@ -101,7 +103,15 @@ var WEBVR = {
 
 				if ( currentSession === null ) {
 
-					navigator.xr.requestSession( 'immersive-vr' ).then( onSessionStarted );
+					// WebXR's requestReferenceSpace only works if the corresponding feature
+					// was requested at session creation time. For simplicity, just ask for
+					// the interesting ones as optional features, but be aware that the
+					// requestReferenceSpace call will fail if it turns out to be unavailable.
+					// ('local' is always available for immersive sessions and doesn't need to
+					// be requested separately.)
+
+					var sessionInit = { optionalFeatures: [ 'local-floor', 'bounded-floor' ] };
+					navigator.xr.requestSession( 'immersive-vr', sessionInit ).then( onSessionStarted );
 
 				} else {
 
@@ -134,7 +144,7 @@ var WEBVR = {
 
 			button.textContent = 'VR NOT FOUND';
 
-			renderer.vr.setDevice( null );
+			renderer.xr.setDevice( null );
 
 		}
 
@@ -163,14 +173,26 @@ var WEBVR = {
 
 		}
 
-		if ( 'xr' in navigator && 'supportsSession' in navigator.xr ) {
+		if ( 'xr' in navigator ) {
 
 			var button = document.createElement( 'button' );
 			button.style.display = 'none';
 
 			stylizeElement( button );
 
-			navigator.xr.supportsSession( 'immersive-vr' ).then( showEnterXR ).catch( showXRNotFound );
+			navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
+
+				if ( supported ) {
+
+					showEnterXR();
+
+				} else {
+
+					showXRNotFound();
+
+				}
+
+			} );
 
 			return button;
 

@@ -8,17 +8,33 @@
  */
 const OBJLoader2Parser = function () {
 
+	this.logging = {
+		enabled: false,
+		debug: false
+	};
+
 	let scope = this;
 	this.callbacks = {
-		onProgress: function ( type, text, numericalValue ) {
-			scope._onProgress( type, text, numericalValue )
+		onProgress: function ( text ) {
+
+			scope._onProgress( text );
+
 		},
 		onAssetAvailable: function ( payload ) {
-			scope._onAssetAvailable( payload )
+
+			scope._onAssetAvailable( payload );
+
 		},
 		onError: function ( errorMessage ) {
-			scope._onError( errorMessage )
-		}
+
+			scope._onError( errorMessage );
+
+		},
+		onLoad: function ( object3d, message ) {
+
+			scope._onLoad( object3d, message );
+
+		},
 	};
 	this.contentRef = null;
 	this.legacyMode = false;
@@ -66,11 +82,6 @@ const OBJLoader2Parser = function () {
 		lineByte: 0,
 		currentByte: 0,
 		totalBytes: 0
-	};
-
-	this.logging = {
-		enabled: true,
-		debug: false
 	};
 
 };
@@ -149,19 +160,14 @@ OBJLoader2Parser.prototype = {
 
 	},
 
-	_setMaterials: function ( materials ) {
+	/**
+	 * Clears materials object and sets the new ones.
+	 *
+	 * @param {Object} materials Object with named materials
+	 */
+	setMaterials: function ( materials ) {
 
-		if ( materials === undefined || materials === null ) return;
-
-		for ( let materialName in materials ) {
-
-			if ( materials.hasOwnProperty( materialName ) ) {
-
-				this.materials[ materialName ] = materials[ materialName ];
-
-			}
-
-		}
+ 		this.materials = Object.assign( {}, materials );
 
 	},
 
@@ -217,26 +223,31 @@ OBJLoader2Parser.prototype = {
 	},
 
 	/**
-	 * Announce feedback which is give to the registered callbacks.
+	 * Register a function that is called when parsing was completed.
+	 *
+	 * @param {Function} onLoad
+	 * @return {OBJLoader2Parser}
+	 */
+	setCallbackOnLoad: function ( onLoad ) {
+
+		if ( onLoad !== null && onLoad !== undefined && onLoad instanceof Function ) {
+
+			this.callbacks.onLoad = onLoad;
+
+		}
+		return this;
+
+	},
+
+	/**
+	 * Announce parse progress feedback which is logged to the console.
 	 * @private
 	 *
-	 * @param {string} type The type of event
 	 * @param {string} text Textual description of the event
-	 * @param {number} numericalValue Numerical value describing the progress
 	 */
-	_onProgress: function ( type, text, numericalValue ) {
+	_onProgress: function ( text ) {
 
 		let message = text ? text : '';
-		let event = {
-			detail: {
-				type: type,
-				modelName: this.modelName,
-				instanceNo: this.instanceNo,
-				text: message,
-				numericalValue: numericalValue
-			}
-		};
-
 		if ( this.logging.enabled && this.logging.debug ) {
 
 			console.log( message );
@@ -246,7 +257,7 @@ OBJLoader2Parser.prototype = {
 	},
 
 	/**
-	 * Announce error feedback which is given to the generic error handler to the registered callbacks.
+	 * Announce error feedback which is logged as error message.
 	 * @private
 	 *
 	 * @param {String} errorMessage The event containing the error
@@ -266,6 +277,12 @@ OBJLoader2Parser.prototype = {
 		let errorMessage = 'OBJLoader2Parser does not provide implementation for onAssetAvailable. Aborting...';
 		this.callbacks.onError( errorMessage );
 		throw errorMessage;
+
+	},
+
+	_onLoad: function ( object3d, message ) {
+
+		console.log( "You reached parser default onLoad callback: " + message );
 
 	},
 
@@ -825,8 +842,8 @@ OBJLoader2Parser.prototype = {
 
 			this._buildMesh( result );
 			let progressBytesPercent = this.globalCounts.currentByte / this.globalCounts.totalBytes;
-			this._onProgress( 'progressParse', 'Completed [o: ' + this.rawMesh.objectName + ' g:' + this.rawMesh.groupName + '' +
-					'] Total progress: ' + ( progressBytesPercent * 100 ).toFixed( 2 ) + '%', progressBytesPercent );
+			this._onProgress( 'Completed [o: ' + this.rawMesh.objectName + ' g:' + this.rawMesh.groupName + '' +
+				'] Total progress: ' + ( progressBytesPercent * 100 ).toFixed( 2 ) + '%' );
 			this._resetRawMesh();
 
 		}

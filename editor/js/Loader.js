@@ -5,7 +5,6 @@
 var Loader = function ( editor ) {
 
 	var scope = this;
-	var signals = editor.signals;
 
 	this.texturePath = '';
 
@@ -87,59 +86,6 @@ var Loader = function ( editor ) {
 
 				break;
 
-			case 'awd':
-
-				reader.addEventListener( 'load', function ( event ) {
-
-					var loader = new THREE.AWDLoader();
-					var scene = loader.parse( event.target.result );
-
-					editor.execute( new SetSceneCommand( editor, scene ) );
-
-				}, false );
-				reader.readAsArrayBuffer( file );
-
-				break;
-
-			case 'babylon':
-
-				reader.addEventListener( 'load', function ( event ) {
-
-					var contents = event.target.result;
-					var json = JSON.parse( contents );
-
-					var loader = new THREE.BabylonLoader();
-					var scene = loader.parse( json );
-
-					editor.execute( new SetSceneCommand( editor, scene ) );
-
-				}, false );
-				reader.readAsText( file );
-
-				break;
-
-			case 'babylonmeshdata':
-
-				reader.addEventListener( 'load', function ( event ) {
-
-					var contents = event.target.result;
-					var json = JSON.parse( contents );
-
-					var loader = new THREE.BabylonLoader();
-
-					var geometry = loader.parseGeometry( json );
-					var material = new THREE.MeshStandardMaterial();
-
-					var mesh = new THREE.Mesh( geometry, material );
-					mesh.name = filename;
-
-					editor.execute( new AddObjectCommand( editor, mesh ) );
-
-				}, false );
-				reader.readAsText( file );
-
-				break;
-
 			case 'dae':
 
 				reader.addEventListener( 'load', function ( event ) {
@@ -156,6 +102,30 @@ var Loader = function ( editor ) {
 
 				}, false );
 				reader.readAsText( file );
+
+				break;
+
+			case 'drc':
+
+				reader.addEventListener( 'load', function ( event ) {
+
+					var contents = event.target.result;
+
+					var loader = new THREE.DRACOLoader();
+					loader.setDecoderPath( '../examples/js/libs/draco/' );
+					loader.decodeDracoFile( contents, function ( geometry ) {
+
+						var material = new THREE.MeshStandardMaterial();
+
+						var mesh = new THREE.Mesh( geometry, material );
+						mesh.name = filename;
+
+						editor.execute( new AddObjectCommand( editor, mesh ) );
+
+					} );
+
+				}, false );
+				reader.readAsArrayBuffer( file );
 
 				break;
 
@@ -182,10 +152,11 @@ var Loader = function ( editor ) {
 
 					var contents = event.target.result;
 
-					THREE.DRACOLoader.setDecoderPath( '../examples/js/libs/draco/gltf/' );
+					var dracoLoader = new THREE.DRACOLoader();
+					dracoLoader.setDecoderPath( '../examples/js/libs/draco/gltf/' );
 
 					var loader = new THREE.GLTFLoader();
-					loader.setDRACOLoader( new THREE.DRACOLoader() );
+					loader.setDRACOLoader( dracoLoader );
 					loader.parse( contents, '', function ( result ) {
 
 						var scene = result.scene;
@@ -211,7 +182,7 @@ var Loader = function ( editor ) {
 
 					if ( isGLTF1( contents ) ) {
 
-						loader = new THREE.LegacyGLTFLoader( manager );
+						alert( 'Import of glTF asset not possible. Only versions >= 2.0 are supported. Please try to upgrade the file to glTF 2.0 using glTF-Pipeline.' );
 
 					} else {
 
@@ -339,23 +310,6 @@ var Loader = function ( editor ) {
 
 					var object = new THREE.OBJLoader().parse( contents );
 					object.name = filename;
-
-					editor.execute( new AddObjectCommand( editor, object ) );
-
-				}, false );
-				reader.readAsText( file );
-
-				break;
-
-			case 'playcanvas':
-
-				reader.addEventListener( 'load', function ( event ) {
-
-					var contents = event.target.result;
-					var json = JSON.parse( contents );
-
-					var loader = new THREE.PlayCanvasLoader();
-					var object = loader.parse( json );
 
 					editor.execute( new AddObjectCommand( editor, object ) );
 
@@ -675,7 +629,7 @@ var Loader = function ( editor ) {
 						var scene = result.scene;
 
 						editor.addAnimation( scene, result.animations );
-						editor.execute( new AddObjectCommand( scene ) );
+						editor.execute( new AddObjectCommand( editor, scene ) );
 
 					} );
 

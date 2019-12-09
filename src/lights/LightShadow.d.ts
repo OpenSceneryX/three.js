@@ -14,13 +14,14 @@ export class LightShadow {
 	radius: number;
 	mapSize: Vector2;
 	map: RenderTarget;
+	mapPass: RenderTarget;
 	matrix: Matrix4;
 
 	copy( source: LightShadow ): this;
 	clone( recursive?: boolean ): this;
 	toJSON(): any;
 	getFrustum(): number;
-	updateMatrices( light: Light, viewCamera: Camera, viewportIndex: number ): void;
+	updateMatrices( light: Light, viewportIndex?: number ): void;
 	getViewport( viewportIndex: number ): Vector4;
 	getFrameExtents(): Vector2;
 
