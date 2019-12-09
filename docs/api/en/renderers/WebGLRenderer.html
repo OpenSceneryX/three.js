@@ -65,7 +65,9 @@
 		Default is *true*.<br />
 
 		[page:Boolean logarithmicDepthBuffer] -  whether to use a logarithmic depth buffer. It may
-		be neccesary to use this if dealing with huge differences in scale in a single scene.
+		be neccesary to use this if dealing with huge differences in scale in a single scene. Note that this setting
+		uses gl_FragDepth if available which disables the [link:https://www.khronos.org/opengl/wiki/Early_Fragment_Test Early Fragment Test]
+		optimization and can cause a decrease in performance.
 		Default is *false*. See the [example:webgl_camera_logarithmicdepthbuffer camera / logarithmicdepthbuffer] example.
 		</p>
 
@@ -186,6 +188,7 @@
 					<li>triangles</li>
 					<li>points</li>
 					<li>lines</li>
+					<li>frame</li>
 				</ul>
 			</li>
 			<li>programs
@@ -248,7 +251,7 @@
 
 		<h3>[property:Integer shadowMap.type]</h3>
 		<p>Defines shadow map type (unfiltered, percentage close filtering, percentage close filtering with bilinear filtering in shader)</p>
-		<p>Options are THREE.BasicShadowMap, THREE.PCFShadowMap (default) and THREE.PCFSoftShadowMap. See [page:Renderer Renderer constants] for details.</p>
+		<p>Options are THREE.BasicShadowMap, THREE.PCFShadowMap (default), THREE.PCFSoftShadowMap and THREE.VSMShadowMap. See [page:Renderer Renderer constants] for details.</p>
 
 		<h3>[property:Boolean sortObjects]</h3>
 		<p>
@@ -278,6 +281,16 @@
 		<h3>[property:Number toneMappingWhitePoint]</h3>
 		<p>
 		Tone mapping white point. Default is *1*.
+		</p>
+
+		<h3>[property:Object xr]</h3>
+		<p>
+		Provides access to the WebXR related interface of the renderer.
+		</p>
+
+		<h3>[property:Boolean xr.enabled]</h3>
+		<p>
+		Whether the renderer should enable XR rendering or not. Default is *false*.
 		</p>
 
 		<h2>Methods</h2>
@@ -391,6 +404,9 @@
 		Returns the viewport.
 		</p>
 
+		<h3>[method:null initTexture]( [param:Texture texture] )</h3>
+		<p> Initializes the given texture. Useful for preloading a texture rather than waiting until first render (which can cause noticeable lags due to decode and GPU upload overhead).</p>
+
 		<h3>[method:null resetGLState]( )</h3>
 		<p>Reset the GL state to default. Called internally if the WebGL context is lost.</p>
 
@@ -425,7 +441,7 @@
 
 		<h3>[method:null setAnimationLoop]( [param:Function callback] )</h3>
 		<p>[page:Function callback] — The function will be called every available frame. If `null` is passed it will stop any already ongoing animation.</p>
-		<p>A built in function that can be used instead of [link:https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame requestAnimationFrame]. For WebVR projects this function must be used.</p>
+		<p>A built in function that can be used instead of [link:https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame requestAnimationFrame]. For WebXR projects this function must be used.</p>
 
 		<h3>[method:null setClearAlpha]( [param:Float alpha] )</h3>
 		<p>Sets the clear alpha. Valid input is a float between *0.0* and *1.0*.</p>
@@ -481,6 +497,8 @@
 
 		<h2>Source</h2>
 
-		[link:https://github.com/mrdoob/three.js/blob/master/src/[path].js src/[path].js]
+		<p>
+			[link:https://github.com/mrdoob/three.js/blob/master/src/[path].js src/[path].js]
+		</p>
 	</body>
 </html>

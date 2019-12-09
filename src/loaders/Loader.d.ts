@@ -1,4 +1,3 @@
-import { LoaderHandler } from './FileLoader';
 import { LoadingManager } from './LoadingManager';
 
 /**
@@ -21,7 +20,5 @@ export class Loader {
 	setCrossOrigin( crossOrigin: string ): this;
 	setPath( path: string ): this;
 	setResourcePath( resourcePath: string ): this;
-
-	static Handlers: LoaderHandler;
 
 }

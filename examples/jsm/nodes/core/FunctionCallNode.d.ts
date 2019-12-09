@@ -4,16 +4,17 @@ import { TempNode } from './TempNode';
 import { NodeBuilder } from './NodeBuilder';
 
 export class FunctionCallNode extends TempNode {
-  constructor(func: FunctionNode, inputs?: Node[]);
 
-  nodeType: string;
+	constructor( func: FunctionNode, inputs?: Node[] );
 
-  value: FunctionNode;
-  inputs: Node[];
+	nodeType: string;
 
-  setFunction(func: FunctionNode, inputs?: Node[]): void;
-  getFunction(): FunctionNode;
-  getType(): string;
-  generate(builder: NodeBuilder, output: string): string;
-  copy(source: FunctionCallNode): this;
+	value: FunctionNode;
+	inputs: Node[];
+
+	setFunction( func: FunctionNode, inputs?: Node[] ): void;
+	getFunction(): FunctionNode;
+	getType(): string;
+	copy( source: FunctionCallNode ): this;
+
 }
