@@ -114,6 +114,7 @@ var files = [
 	{ path: 'math/SimplexNoise.js', dependencies: [], ignoreList: [] },
 
 	{ path: 'misc/ConvexObjectBreaker.js', dependencies: [ { name: 'ConvexBufferGeometry', path: 'geometries/ConvexGeometry.js' } ], ignoreList: [ 'Matrix4' ] },
+	{ path: 'misc/GPUComputationRenderer.js', dependencies: [], ignoreList: [] },
 	{ path: 'misc/Gyroscope.js', dependencies: [], ignoreList: [] },
 	{ path: 'misc/MD2Character.js', dependencies: [ { name: 'MD2Loader', path: 'loaders/MD2Loader.js' } ], ignoreList: [] },
 	{ path: 'misc/MD2CharacterComplex.js', dependencies: [ { name: 'MD2Loader', path: 'loaders/MD2Loader.js' }, { name: 'MorphBlendMesh', path: 'misc/MorphBlendMesh.js' } ], ignoreList: [] },
@@ -140,8 +141,6 @@ var files = [
 	{ path: 'objects/Sky.js', dependencies: [], ignoreList: [] },
 	{ path: 'objects/Water.js', dependencies: [], ignoreList: [] },
 	{ path: 'objects/Water2.js', dependencies: [ { name: 'Reflector', path: 'objects/Reflector.js' }, { name: 'Refractor', path: 'objects/Refractor.js' } ], ignoreList: [] },
-
-	{ path: 'pmrem/PMREMGenerator.js', dependencies: [], ignoreList: [] },
 
 	{ path: 'postprocessing/AdaptiveToneMappingPass.js', dependencies: [ { name: 'Pass', path: 'postprocessing/Pass.js' }, { name: 'CopyShader', path: 'shaders/CopyShader.js' }, { name: 'LuminosityShader', path: 'shaders/LuminosityShader.js' }, { name: 'ToneMapShader', path: 'shaders/ToneMapShader.js' } ], ignoreList: [] },
 	{ path: 'postprocessing/AfterimagePass.js', dependencies: [ { name: 'Pass', path: 'postprocessing/Pass.js' }, { name: 'AfterimageShader', path: 'shaders/AfterimageShader.js' } ], ignoreList: [] },
@@ -211,7 +210,6 @@ var files = [
 	{ path: 'shaders/RGBShiftShader.js', dependencies: [], ignoreList: [] },
 	{ path: 'shaders/SAOShader.js', dependencies: [], ignoreList: [] },
 	{ path: 'shaders/SepiaShader.js', dependencies: [], ignoreList: [] },
-	{ path: 'shaders/SkinShader.js', dependencies: [], ignoreList: [] },
 	{ path: 'shaders/SMAAShader.js', dependencies: [], ignoreList: [] },
 	{ path: 'shaders/SobelOperatorShader.js', dependencies: [], ignoreList: [] },
 	{ path: 'shaders/SSAOShader.js', dependencies: [], ignoreList: [] },
@@ -235,8 +233,6 @@ var files = [
 	{ path: 'utils/SkeletonUtils.js', dependencies: [], ignoreList: [] },
 	{ path: 'utils/TypedArrayUtils.js', dependencies: [], ignoreList: [] },
 	{ path: 'utils/UVsDebug.js', dependencies: [], ignoreList: [ 'SphereBufferGeometry' ] },
-
-	{ path: 'vr/WebVR.js', dependencies: [], ignoreList: [] },
 
 	{ path: 'WebGL.js', dependencies: [], ignoreList: [] },
 ];
