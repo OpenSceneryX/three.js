@@ -49,121 +49,13 @@ THREE.XPlaneFacLoader = ( function () {
 
 		loadRoofTexture: function ( path ) {
 
-			var scope = this;
-			var textureLoader = new THREE.TextureLoader();
-			var ddsLoader = new THREE.DDSLoader();
-
-			// Spec says that even if the specified texture has a .png suffix, X-Plane will attempt to load a DDS
-			// texture with equivalent .dds extension first. So we do the same.
-			var splitPath = path.split('.');
-			// Remove extension
-			splitPath.pop();
-
-			var ddsPath = splitPath.concat(['dds']).join('.');
-			var pngPath = splitPath.concat(['png']).join('.');
-
-			// DDS Texture loading currently disabled because of this bug https://github.com/mrdoob/three.js/issues/4316 - Compressed DDS textures load upside down
-			ddsLoader.load(
-				// resource URL
-				ddsPath,
-
-				// onLoad callback
-				function ( texture ) {
-					texture.anisotropy = 16;
-					scope.roofMaterial.map = texture;
-					scope.roofMaterial.map.needsUpdate = true;
-					scope.roofMaterial.needsUpdate = true;
-				},
-
-				// onProgress callback
-				undefined,
-
-				// onError callback
-				function ( err ) {
-					textureLoader.load(
-						// resource URL
-						pngPath,
-
-						// onLoad callback
-						function ( texture ) {
-							texture.anisotropy = 16;
-							scope.roofMaterial.map = texture;
-							scope.roofMaterial.map.needsUpdate = true;
-							scope.roofMaterial.needsUpdate = true;
-						},
-
-						// onProgress callback
-						undefined,
-
-						// onError callback
-						function ( err ) {
-							console.error( 'Could not load texture. Tried ' + ddsPath + ' and ' + pngPath );
-						}
-					);
-				}
-			);
-
-			return this;
+			THREE.XPlaneUtils.loadTexture(this.roofMaterial, path);
 
 		},
 
 		loadWallTexture: function ( path ) {
 
-			var scope = this;
-			var textureLoader = new THREE.TextureLoader();
-			var ddsLoader = new THREE.DDSLoader();
-
-			// Spec says that even if the specified texture has a .png suffix, X-Plane will attempt to load a DDS
-			// texture with equivalent .dds extension first. So we do the same.
-			var splitPath = path.split('.');
-			// Remove extension
-			splitPath.pop();
-
-			var ddsPath = splitPath.concat(['dds']).join('.');
-			var pngPath = splitPath.concat(['png']).join('.');
-
-			// DDS Texture loading currently disabled because of this bug https://github.com/mrdoob/three.js/issues/4316 - Compressed DDS textures load upside down
-			ddsLoader.load(
-				// resource URL
-				ddsPath,
-
-				// onLoad callback
-				function ( texture ) {
-					texture.anisotropy = 16;
-					scope.wallMaterial.map = texture;
-					scope.wallMaterial.map.needsUpdate = true;
-					scope.wallMaterial.needsUpdate = true;
-				},
-
-				// onProgress callback
-				undefined,
-
-				// onError callback
-				function ( err ) {
-					textureLoader.load(
-						// resource URL
-						pngPath,
-
-						// onLoad callback
-						function ( texture ) {
-							texture.anisotropy = 16;
-							scope.wallMaterial.map = texture;
-							scope.wallMaterial.map.needsUpdate = true;
-							scope.wallMaterial.needsUpdate = true;
-						},
-
-						// onProgress callback
-						undefined,
-
-						// onError callback
-						function ( err ) {
-							console.error( 'Could not load texture. Tried ' + ddsPath + ' and ' + pngPath );
-						}
-					);
-				}
-			);
-
-			return this;
+			THREE.XPlaneUtils.loadTexture(this.wallMaterial, path);
 
 		},
 
