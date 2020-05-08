@@ -49,13 +49,13 @@ THREE.XPlaneFacLoader = ( function () {
 
 		loadRoofTexture: function ( path ) {
 
-			THREE.XPlaneUtils.loadTexture(this.roofMaterial, path);
+			THREE.XPlaneUtils.loadTexture(this.roofMaterial, path, true);
 
 		},
 
 		loadWallTexture: function ( path ) {
 
-			THREE.XPlaneUtils.loadTexture(this.wallMaterial, path);
+			THREE.XPlaneUtils.loadTexture(this.wallMaterial, path, true);
 
 		},
 
