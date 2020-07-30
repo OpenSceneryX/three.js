@@ -1,11 +1,3 @@
-/**
- * @author supereggbert / http://www.paulbrunt.co.uk/
- * @author mrdoob / http://mrdoob.com/
- * @author alteredq / http://alteredqualia.com/
- * @author szimek / https://github.com/szimek/
- * @author tschw
- */
-
 import {
 	RGBAFormat,
 	HalfFloatType,
@@ -303,7 +295,7 @@ function WebGLRenderer( parameters ) {
 		morphtargets = new WebGLMorphtargets( _gl );
 		programCache = new WebGLPrograms( _this, extensions, capabilities, bindingStates );
 		materials = new WebGLMaterials( properties );
-		renderLists = new WebGLRenderLists();
+		renderLists = new WebGLRenderLists( properties );
 		renderStates = new WebGLRenderStates();
 
 		background = new WebGLBackground( _this, state, objects, _premultipliedAlpha );
@@ -652,8 +644,6 @@ function WebGLRenderer( parameters ) {
 
 		const programInfo = properties.get( material ).program;
 
-		material.program = undefined;
-
 		if ( programInfo !== undefined ) {
 
 			programCache.releaseProgram( programInfo );
@@ -859,13 +849,13 @@ function WebGLRenderer( parameters ) {
 
 		if ( object.isInstancedMesh ) {
 
-			renderer.renderInstances( geometry, drawStart, drawCount, object.count );
+			renderer.renderInstances( drawStart, drawCount, object.count );
 
 		} else if ( geometry.isInstancedBufferGeometry ) {
 
 			const instanceCount = Math.min( geometry.instanceCount, geometry._maxInstanceCount );
 
-			renderer.renderInstances( geometry, drawStart, drawCount, instanceCount );
+			renderer.renderInstances( drawStart, drawCount, instanceCount );
 
 		} else {
 
@@ -1350,12 +1340,15 @@ function WebGLRenderer( parameters ) {
 
 		if ( programChange ) {
 
+			parameters.uniforms = programCache.getUniforms( material, parameters );
+
+			material.onBeforeCompile( parameters, _this );
+
 			program = programCache.acquireProgram( parameters, programCacheKey );
 
 			materialProperties.program = program;
 			materialProperties.uniforms = parameters.uniforms;
 			materialProperties.outputEncoding = parameters.outputEncoding;
-			material.program = program;
 
 		}
 

@@ -1,9 +1,4 @@
-﻿/**
- * @author Mugen87 / https://github.com/Mugen87
- * @author Takahiro / https://github.com/takahirox
- */
-
-function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
+﻿function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 	const maxVertexAttributes = gl.getParameter( gl.MAX_VERTEX_ATTRIBS );
 
@@ -282,7 +277,7 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 		if ( capabilities.isWebGL2 === true && ( type === gl.INT || type === gl.UNSIGNED_INT ) ) {
 
-			gl.vertexAttribIPointer( index, size, type, normalized, stride, offset );
+			gl.vertexAttribIPointer( index, size, type, stride, offset );
 
 		} else {
 
