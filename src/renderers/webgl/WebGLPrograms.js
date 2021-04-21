@@ -3,7 +3,7 @@ import { WebGLProgram } from './WebGLProgram.js';
 import { ShaderLib } from '../shaders/ShaderLib.js';
 import { UniformsUtils } from '../shaders/UniformsUtils.js';
 
-function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
+function WebGLPrograms( renderer, cubemaps, extensions, capabilities, bindingStates, clipping ) {
 
 	const programs = [];
 
@@ -34,22 +34,21 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 	};
 
 	const parameterNames = [
-		"precision", "isWebGL2", "supportsVertexTextures", "outputEncoding", "instancing",
-		"map", "mapEncoding", "matcap", "matcapEncoding", "envMap", "envMapMode", "envMapEncoding", "envMapCubeUV",
-		"lightMap", "lightMapEncoding", "aoMap", "emissiveMap", "emissiveMapEncoding", "bumpMap", "normalMap", "objectSpaceNormalMap", "tangentSpaceNormalMap", "clearcoatMap", "clearcoatRoughnessMap", "clearcoatNormalMap", "displacementMap", "specularMap",
-		"roughnessMap", "metalnessMap", "gradientMap",
-		"alphaMap", "combine", "vertexColors", "vertexTangents", "vertexUvs", "uvsVertexOnly", "fog", "useFog", "fogExp2",
-		"flatShading", "sizeAttenuation", "logarithmicDepthBuffer", "skinning",
-		"maxBones", "useVertexTexture", "morphTargets", "morphNormals",
-		"maxMorphTargets", "maxMorphNormals", "premultipliedAlpha",
-		"numDirLights", "numPointLights", "numSpotLights", "numHemiLights", "numRectAreaLights",
-		"numDirLightShadows", "numPointLightShadows", "numSpotLightShadows",
-		"shadowMapEnabled", "shadowMapType", "toneMapping", 'physicallyCorrectLights',
-		"alphaTest", "doubleSided", "flipSided", "numClippingPlanes", "numClipIntersection", "depthPacking", "dithering",
-		"sheen", "transmissionMap"
+		'precision', 'isWebGL2', 'supportsVertexTextures', 'outputEncoding', 'instancing', 'instancingColor',
+		'map', 'mapEncoding', 'matcap', 'matcapEncoding', 'envMap', 'envMapMode', 'envMapEncoding', 'envMapCubeUV',
+		'lightMap', 'lightMapEncoding', 'aoMap', 'emissiveMap', 'emissiveMapEncoding', 'bumpMap', 'normalMap', 'objectSpaceNormalMap', 'tangentSpaceNormalMap', 'clearcoatMap', 'clearcoatRoughnessMap', 'clearcoatNormalMap', 'displacementMap', 'specularMap',
+		'roughnessMap', 'metalnessMap', 'gradientMap',
+		'alphaMap', 'combine', 'vertexColors', 'vertexAlphas', 'vertexTangents', 'vertexUvs', 'uvsVertexOnly', 'fog', 'useFog', 'fogExp2',
+		'flatShading', 'sizeAttenuation', 'logarithmicDepthBuffer', 'skinning',
+		'maxBones', 'useVertexTexture', 'morphTargets', 'morphNormals', 'premultipliedAlpha',
+		'numDirLights', 'numPointLights', 'numSpotLights', 'numHemiLights', 'numRectAreaLights',
+		'numDirLightShadows', 'numPointLightShadows', 'numSpotLightShadows',
+		'shadowMapEnabled', 'shadowMapType', 'toneMapping', 'physicallyCorrectLights',
+		'alphaTest', 'doubleSided', 'flipSided', 'numClippingPlanes', 'numClipIntersection', 'depthPacking', 'dithering',
+		'sheen', 'transmissionMap'
 	];
 
-	function allocateBones( object ) {
+	function getMaxBones( object ) {
 
 		const skeleton = object.skeleton;
 		const bones = skeleton.bones;
@@ -89,18 +88,18 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 
 		let encoding;
 
-		if ( ! map ) {
-
-			encoding = LinearEncoding;
-
-		} else if ( map.isTexture ) {
+		if ( map && map.isTexture ) {
 
 			encoding = map.encoding;
 
-		} else if ( map.isWebGLRenderTarget ) {
+		} else if ( map && map.isWebGLRenderTarget ) {
 
-			console.warn( "THREE.WebGLPrograms.getTextureEncodingFromMap: don't use render targets as textures. Use their .texture property instead." );
+			console.warn( 'THREE.WebGLPrograms.getTextureEncodingFromMap: don\'t use render targets as textures. Use their .texture property instead.' );
 			encoding = map.texture.encoding;
+
+		} else {
+
+			encoding = LinearEncoding;
 
 		}
 
@@ -108,19 +107,19 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 
 	}
 
-	function getParameters( material, lights, shadows, scene, nClipPlanes, nClipIntersection, object ) {
+	function getParameters( material, lights, shadows, scene, object ) {
 
 		const fog = scene.fog;
 		const environment = material.isMeshStandardMaterial ? scene.environment : null;
 
-		const envMap = material.envMap || environment;
+		const envMap = cubemaps.get( material.envMap || environment );
 
 		const shaderID = shaderIDs[ material.type ];
 
 		// heuristics to create shader parameters according to lights in the scene
 		// (not to blow over maxLights budget)
 
-		const maxBones = object.isSkinnedMesh ? allocateBones( object ) : 0;
+		const maxBones = object.isSkinnedMesh ? getMaxBones( object ) : 0;
 
 		if ( material.precision !== null ) {
 
@@ -163,12 +162,13 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 			fragmentShader: fragmentShader,
 			defines: material.defines,
 
-			isRawShaderMaterial: material.isRawShaderMaterial,
-			isShaderMaterial: material.isShaderMaterial,
+			isRawShaderMaterial: material.isRawShaderMaterial === true,
+			glslVersion: material.glslVersion,
 
 			precision: precision,
 
 			instancing: object.isInstancedMesh === true,
+			instancingColor: object.isInstancedMesh === true && object.instanceColor !== null,
 
 			supportsVertexTextures: vertexTextures,
 			outputEncoding: ( currentRenderTarget !== null ) ? getTextureEncodingFromMap( currentRenderTarget.texture ) : renderer.outputEncoding,
@@ -208,6 +208,7 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 
 			vertexTangents: ( material.normalMap && material.vertexTangents ),
 			vertexColors: material.vertexColors,
+			vertexAlphas: material.vertexColors === true && object.geometry.attributes.color && object.geometry.attributes.color.itemSize === 4,
 			vertexUvs: !! material.map || !! material.bumpMap || !! material.normalMap || !! material.specularMap || !! material.alphaMap || !! material.emissiveMap || !! material.roughnessMap || !! material.metalnessMap || !! material.clearcoatMap || !! material.clearcoatRoughnessMap || !! material.clearcoatNormalMap || !! material.displacementMap || !! material.transmissionMap,
 			uvsVertexOnly: ! ( !! material.map || !! material.bumpMap || !! material.normalMap || !! material.specularMap || !! material.alphaMap || !! material.emissiveMap || !! material.roughnessMap || !! material.metalnessMap || !! material.clearcoatNormalMap || !! material.transmissionMap ) && !! material.displacementMap,
 
@@ -215,7 +216,7 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 			useFog: material.fog,
 			fogExp2: ( fog && fog.isFogExp2 ),
 
-			flatShading: material.flatShading,
+			flatShading: !! material.flatShading,
 
 			sizeAttenuation: material.sizeAttenuation,
 			logarithmicDepthBuffer: logarithmicDepthBuffer,
@@ -226,8 +227,6 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 
 			morphTargets: material.morphTargets,
 			morphNormals: material.morphNormals,
-			maxMorphTargets: renderer.maxMorphTargets,
-			maxMorphNormals: renderer.maxMorphNormals,
 
 			numDirLights: lights.directional.length,
 			numPointLights: lights.point.length,
@@ -239,8 +238,8 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 			numPointLightShadows: lights.pointShadowMap.length,
 			numSpotLightShadows: lights.spotShadowMap.length,
 
-			numClippingPlanes: nClipPlanes,
-			numClipIntersection: nClipIntersection,
+			numClippingPlanes: clipping.numPlanes,
+			numClipIntersection: clipping.numIntersection,
 
 			dithering: material.dithering,
 
@@ -265,9 +264,9 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 			extensionDrawBuffers: material.extensions && material.extensions.drawBuffers,
 			extensionShaderTextureLOD: material.extensions && material.extensions.shaderTextureLOD,
 
-			rendererExtensionFragDepth: isWebGL2 || extensions.get( 'EXT_frag_depth' ) !== null,
-			rendererExtensionDrawBuffers: isWebGL2 || extensions.get( 'WEBGL_draw_buffers' ) !== null,
-			rendererExtensionShaderTextureLod: isWebGL2 || extensions.get( 'EXT_shader_texture_lod' ) !== null,
+			rendererExtensionFragDepth: isWebGL2 || extensions.has( 'EXT_frag_depth' ),
+			rendererExtensionDrawBuffers: isWebGL2 || extensions.has( 'WEBGL_draw_buffers' ),
+			rendererExtensionShaderTextureLod: isWebGL2 || extensions.has( 'EXT_shader_texture_lod' ),
 
 			customProgramCacheKey: material.customProgramCacheKey()
 
@@ -303,7 +302,7 @@ function WebGLPrograms( renderer, extensions, capabilities, bindingStates ) {
 
 		}
 
-		if ( parameters.isRawShaderMaterial === undefined ) {
+		if ( parameters.isRawShaderMaterial === false ) {
 
 			for ( let i = 0; i < parameterNames.length; i ++ ) {
 
