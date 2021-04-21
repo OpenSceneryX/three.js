@@ -1,18 +1,15 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
 import {
 	Matrix4,
 	Object3D,
 	Vector3
-} from "../../../build/three.module.js";
+} from '../../../build/three.module.js';
 
 var CSS2DObject = function ( element ) {
 
 	Object3D.call( this );
 
-	this.element = element;
+	this.element = element || document.createElement( 'div' );
+
 	this.element.style.position = 'absolute';
 
 	this.addEventListener( 'removed', function () {
@@ -31,8 +28,21 @@ var CSS2DObject = function ( element ) {
 
 };
 
-CSS2DObject.prototype = Object.create( Object3D.prototype );
-CSS2DObject.prototype.constructor = CSS2DObject;
+CSS2DObject.prototype = Object.assign( Object.create( Object3D.prototype ), {
+
+	constructor: CSS2DObject,
+
+	copy: function ( source, recursive ) {
+
+		Object3D.prototype.copy.call( this, source, recursive );
+
+		this.element = source.element.cloneNode( true );
+
+		return this;
+
+	}
+
+} );
 
 //
 
@@ -88,12 +98,17 @@ var CSS2DRenderer = function () {
 			vector.applyMatrix4( viewProjectionMatrix );
 
 			var element = object.element;
-			var style = 'translate(-50%,-50%) translate(' + ( vector.x * _widthHalf + _widthHalf ) + 'px,' + ( - vector.y * _heightHalf + _heightHalf ) + 'px)';
 
-			element.style.WebkitTransform = style;
-			element.style.MozTransform = style;
-			element.style.oTransform = style;
-			element.style.transform = style;
+			if ( /apple/i.test( navigator.vendor ) ) {
+
+				// https://github.com/mrdoob/three.js/issues/21415
+				element.style.transform = 'translate(-50%,-50%) translate(' + Math.round( vector.x * _widthHalf + _widthHalf ) + 'px,' + Math.round( - vector.y * _heightHalf + _heightHalf ) + 'px)';
+
+			} else {
+
+				element.style.transform = 'translate(-50%,-50%) translate(' + ( vector.x * _widthHalf + _widthHalf ) + 'px,' + ( - vector.y * _heightHalf + _heightHalf ) + 'px)';
+
+			}
 
 			element.style.display = ( object.visible && vector.z >= - 1 && vector.z <= 1 ) ? '' : 'none';
 
